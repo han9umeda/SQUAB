@@ -90,13 +90,14 @@ echo "docker run -d --name pr_${PR_NAME}_rpki ${SRX_CONTAINER_IMAGE}"
 echo "docker network create --subnet ${RNET_ADDRESS_PREFIX}.0/24 pr_${PR_NAME}_rnet"
 RPKI_ADDRESS=${RNET_ADDRESS_PREFIX}.254
 echo "docker network connect --ip ${RPKI_ADDRESS}/24 pr_${PR_NAME}_rnet pr_${PR_NAME}_rpki"
-for i in $(seq 0 $(expr ${#AS_NUMBER[@]} - 1))
+i=0
+for asn in ${AS_NUMBER[@]}
 do
-	ASN=${AS_NUMBER[i]}
-	SECF=${SEC_FLAG[i]}
+	eval SECF=\$SEC_FLAG_AS$asn
 	if [ $SECF -eq 1 ]	# BGPsec
 	then
-		echo "docker network connect --ip ${RNET_ADDRESS_PREFIX}.$(expr $i + 2)/24 pr_${PR_NAME}_rnet pr_${PR_NAME}_as${ASN}"
+		echo "docker network connect --ip ${RNET_ADDRESS_PREFIX}.$(expr $i + 2)/24 pr_${PR_NAME}_rnet pr_${PR_NAME}_as$asn"
+		i=`expr $i + 1`
 	fi
 done
 
