@@ -38,32 +38,32 @@ do
 	INPUT=("${INPUT[@]:2}")
 done
 
-for as in ${AS_NUMBER[@]}
-do
-	eval "echo \$SEC_FLAG_AS$as"
-done
-
 #TODO: Peer_info以下の読み取り
 #TODO: 存在するASであるか確認、一意のPeerであるか確認(重複は削除？)、同じAS同士でないか確認
 
 echo "Including Config file: succeeded"
 
 # ASを作っていく
-for i in $(seq 0 $(expr ${#AS_NUMBER[@]} - 1))
+i=0
+for asn in ${AS_NUMBER[@]}
 do
-	ASN=${AS_NUMBER[i]}
-	SECF=${SEC_FLAG[i]}
+	eval SECF=\$SEC_FLAG_AS$asn
 	if [ $SECF -eq 1 ]	# BGPsec
 	then
-		echo "docker run -d --name pr_${PR_NAME}_as$ASN ${SRX_CONTAINER_IMAGE}"
+		echo "docker run -d --name pr_${PR_NAME}_as$asn ${SRX_CONTAINER_IMAGE}"
 	else			# BGP
-		echo "docker run -d --name pr_${PR_NAME}_as$ASN ${QUAGGA_CONTAINER_IMAGE}"
+		echo "docker run -d --name pr_${PR_NAME}_as$asn ${QUAGGA_CONTAINER_IMAGE}"
 	fi
-	echo "docker network create --subnet ${BNET_ADDRESS_PREFIX}.$(expr $i + 1).0/24 pr_${PR_NAME}_bnet_as${ASN}"
-	echo "docker network connect --ip ${BNET_ADDRESS_PREFIX}.$(expr $i + 1).2/24 pr_${PR_NAME}_bnet_as${ASN} pr_${PR_NAME}_as${ASN}"
-	AS_BNET_ADDRESS+=(${BNET_ADDRESS_PREFIX}.$(expr $i + 1).2/24)
+	echo "docker network create --subnet ${BNET_ADDRESS_PREFIX}.$(expr $i + 1).0/24 pr_${PR_NAME}_bnet_as$asn"
+	echo "docker network connect --ip ${BNET_ADDRESS_PREFIX}.$(expr $i + 1).2/24 pr_${PR_NAME}_bnet_as$asn pr_${PR_NAME}_as$asn"
+	eval BNET_ADDRESS_AS$asn=${BNET_ADDRESS_PREFIX}.$(expr $i + 1).2/24
+	i=`expr $i + 1`
 done
-echo ${AS_BNET_ADDRESS[@]}
+
+for as in ${AS_NUMBER[@]}
+do
+	eval "echo \$BNET_ADDRESS_AS$as"
+done
 
 # AS間接続を構成していく
 
