@@ -102,6 +102,19 @@ do
 done
 
 # コンテナ内のconfigファイル生成
+as_index=1
+for asn in ${AS_NUMBER[@]}
+do
+	eval SECF=\$SEC_FLAG_AS$asn
+	if [ $SECF -eq 0 ]	# BGP
+	then
+		eval BNET=\$BNET_ADDRESS_AS$asn
+		eval PEER=\${PEER_INFO_AS$asn[@]}
+		PARAM="$as_index $asn $BNET $PEER"
+		echo "docker exec -d pr_${PR_NAME}_as$asn /home/gen_zebra_bgpd_conf.sh $PARAM"
+	fi
+	as_index=`expr $as_index + 1`
+done
 # ファイル生成過程で鍵の生成も行う
 
 # 証明書をrpkiへ移動
