@@ -67,8 +67,8 @@ done
 
 # AS間接続を構成していく
 
-PEER_ARR1=(72 345)
-PEER_ARR2=(6591 17)
+PEER_ARR1=(72 345 72)
+PEER_ARR2=(6591 17 345)
 
 for i in $(seq 0 $(expr ${#PEER_ARR1[@]} - 1))
 do
@@ -77,6 +77,12 @@ do
 	echo "docker network create --subnet ${PNET_ADDRESS_PREFIX}.$(expr $i + 1).0/24 pr_${PR_NAME}_pnet_$(expr $i + 1)"
 	echo "docker network connect --ip ${PNET_ADDRESS_PREFIX}.$(expr $i + 1).2/24 pr_${PR_NAME}_pnet_$(expr $i + 1) pr_${PR_NAME}_as${PEER1}"
 	echo "docker network connect --ip ${PNET_ADDRESS_PREFIX}.$(expr $i + 1).3/24 pr_${PR_NAME}_pnet_$(expr $i + 1) pr_${PR_NAME}_as${PEER2}"
+	TMP=($PEER2 "${PNET_ADDRESS_PREFIX}.$(expr $i + 1).2/24")
+	eval PEER_INFO_AS$PEER1+=\(${TMP[@]}\)
+	TMP=($PEER1 "${PNET_ADDRESS_PREFIX}.$(expr $i + 1).3/24")
+	eval PEER_INFO_AS$PEER2+=\(${TMP[@]}\)
+	# eval "echo \${PEER_INFO_AS$PEER1[@]}"
+	# eval "echo \${PEER_INFO_AS$PEER2[@]}"
 done
 
 # RPKIを作って、全ASと接続
