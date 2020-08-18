@@ -6,5 +6,7 @@ gen_zebra_bgpd_sec_conf.sh: srx_511において、zebra.confファイルとbgpd.
 
 cert_setting.sh: 鍵を生成して、証明書を発行し、publishを行うスクリプト。
 
+
 quagga_099224: quaggaをインストールして、gen_zebra_bgpd_conf.shを/homeに設置したコンテナイメージ。
+
 srx_511: NIST-BGP-SRxをgit cloneして、各種buildツールをインストールしてbuild、そのPATHを通す。qsrx-make-certが求める/etc/”にょろ”のファイルをコピーして設置。cert_setting.shとgen_zebra_bgpd_sec_conf.shを/homeに設置したコンテナイメージ。
