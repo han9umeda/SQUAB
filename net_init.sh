@@ -75,9 +75,9 @@ do
 	docker network create --subnet ${PNET_ADDRESS_PREFIX}.$(expr $i + 1).0/24 pr_${PR_NAME}_pnet_$(expr $i + 1)
 	docker network connect --ip ${PNET_ADDRESS_PREFIX}.$(expr $i + 1).2 pr_${PR_NAME}_pnet_$(expr $i + 1) pr_${PR_NAME}_as${PEER1}
 	docker network connect --ip ${PNET_ADDRESS_PREFIX}.$(expr $i + 1).3 pr_${PR_NAME}_pnet_$(expr $i + 1) pr_${PR_NAME}_as${PEER2}
-	TMP=($PEER2 "${PNET_ADDRESS_PREFIX}.$(expr $i + 1).2")
+	TMP=($PEER2 "${PNET_ADDRESS_PREFIX}.$(expr $i + 1).3")
 	eval PEER_INFO_AS$PEER1+=\(${TMP[@]}\)
-	TMP=($PEER1 "${PNET_ADDRESS_PREFIX}.$(expr $i + 1).3")
+	TMP=($PEER1 "${PNET_ADDRESS_PREFIX}.$(expr $i + 1).2")
 	eval PEER_INFO_AS$PEER2+=\(${TMP[@]}\)
 done
 
