@@ -114,7 +114,7 @@ do
 		echo "docker exec -d pr_${PR_NAME}_as$asn /home/gen_zebra_bgpd_conf.sh $PARAM"
 	else			# BGPsec
 		echo "docker exec -d pr_${PR_NAME}_as$asn /home/cert_setting.sh $asn"	# 鍵生成と証明書作成
-		PARAM= #TODO: 適切に設定
+		PARAM="$as_index $asn $BNET $RPKI_ADDRESS $PEER"
 		echo "docker exec -d pr_${PR_NAME}_as$asn /home/gen_zebra_bgpd_sec_conf.sh $PARAM"
 	fi
 	as_index=`expr $as_index + 1`
