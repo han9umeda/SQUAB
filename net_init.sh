@@ -86,6 +86,7 @@ done
 # RPKIを作って、全ASと接続
 echo "Setting security system..."
 echo "docker run -d --name pr_${PR_NAME}_rpki ${SRX_CONTAINER_IMAGE}"
+echo "docker exec -d pr_${PR_NAME}_rpki mkdir /home/cert"
 echo "docker network create --subnet ${RNET_ADDRESS_PREFIX}.0/24 pr_${PR_NAME}_rnet"
 RPKI_ADDRESS=${RNET_ADDRESS_PREFIX}.254
 echo "docker network connect --ip ${RPKI_ADDRESS}/24 pr_${PR_NAME}_rnet pr_${PR_NAME}_rpki"
@@ -116,11 +117,13 @@ do
 		echo "docker exec -d pr_${PR_NAME}_as$asn /home/cert_setting.sh $asn"	# 鍵生成と証明書作成
 		PARAM="$as_index $asn $BNET $RPKI_ADDRESS $PEER"
 		echo "docker exec -d pr_${PR_NAME}_as$asn /home/gen_zebra_bgpd_sec_conf.sh $PARAM"
+		# 証明書をRPKIへ移動
+		echo "docker cp pr_${PR_NAME}_as$asn:/var/lib/bgpsec-keys/router_as$asn.cert /tmp"
+		echo "docker cp /tmp/router_as$asn.cert pr_${PR_NAME}_rpki:/home/cert"
 	fi
 	as_index=`expr $as_index + 1`
 done
 
-# 証明書をrpkiへ移動
 
 # コンテナ内でプロセスの立ち上げ
 echo "Starting daemons..."
