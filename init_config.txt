@@ -6,3 +6,5 @@ AS_Setting
 17 0
 Peer_info
 72 345
+6591 72
+2 72

@@ -1,9 +1,10 @@
 #!/bin/bash
 #
+# SQUAB(Scalable QUagga-based Automated configuration on BGP)
 # net_init.sh
 #
 PR_NAME=tmp
-QUAGGA_CONTAINER_IMAGE=quagga_124
+QUAGGA_CONTAINER_IMAGE=quagga_099224
 SRX_CONTAINER_IMAGE=srx_511
 
 BNET_ADDRESS_PREFIX=192.168
@@ -11,7 +12,7 @@ PNET_ADDRESS_PREFIX=172.17
 RNET_ADDRESS_PREFIX=172.16.0
 
 # 設定ファイルの読み込み
-
+echo "Import Config file..."
 while read -r line
 do
 	INPUT+=($line)
@@ -38,12 +39,17 @@ do
 	INPUT=("${INPUT[@]:2}")
 done
 
-#TODO: Peer_info以下の読み取り
-#TODO: 存在するASであるか確認、一意のPeerであるか確認(重複は削除？)、同じAS同士でないか確認
+INPUT=("${INPUT[@]:1}") # "Peer_info"行の削除
 
-echo "Including Config file: succeeded"
+while [ ${#INPUT[@]} -ne 0 ]
+do
+	PEER_ARR1+=(${INPUT[0]})
+	PEER_ARR2+=(${INPUT[1]})
+	INPUT=("${INPUT[@]:2}")
+done
 
 # ASを作っていく
+echo "Making AS Container..."
 i=0
 for asn in ${AS_NUMBER[@]}
 do
@@ -60,16 +66,8 @@ do
 	i=`expr $i + 1`
 done
 
-for as in ${AS_NUMBER[@]}
-do
-	eval "echo \$BNET_ADDRESS_AS$as"
-done
-
 # AS間接続を構成していく
-
-PEER_ARR1=(72 345 72)
-PEER_ARR2=(6591 17 345)
-
+echo "Making Peer connection..."
 for i in $(seq 0 $(expr ${#PEER_ARR1[@]} - 1))
 do
 	PEER1=${PEER_ARR1[i]}
@@ -86,6 +84,7 @@ do
 done
 
 # RPKIを作って、全ASと接続
+echo "Setting security system..."
 echo "docker run -d --name pr_${PR_NAME}_rpki ${SRX_CONTAINER_IMAGE}"
 echo "docker network create --subnet ${RNET_ADDRESS_PREFIX}.0/24 pr_${PR_NAME}_rnet"
 RPKI_ADDRESS=${RNET_ADDRESS_PREFIX}.254
@@ -102,22 +101,38 @@ do
 done
 
 # コンテナ内のconfigファイル生成
+echo "Making config file in container..."
 as_index=1
 for asn in ${AS_NUMBER[@]}
 do
 	eval SECF=\$SEC_FLAG_AS$asn
+	eval BNET=\$BNET_ADDRESS_AS$asn
+	eval PEER=\${PEER_INFO_AS$asn[@]}
 	if [ $SECF -eq 0 ]	# BGP
 	then
-		eval BNET=\$BNET_ADDRESS_AS$asn
-		eval PEER=\${PEER_INFO_AS$asn[@]}
 		PARAM="$as_index $asn $BNET $PEER"
 		echo "docker exec -d pr_${PR_NAME}_as$asn /home/gen_zebra_bgpd_conf.sh $PARAM"
+	else			# BGPsec
+		echo "docker exec -d pr_${PR_NAME}_as$asn /home/cert_setting.sh $asn"	# 鍵生成と証明書作成
+		PARAM= #TODO: 適切に設定
+		echo "docker exec -d pr_${PR_NAME}_as$asn /home/gen_zebra_bgpd_sec_conf.sh $PARAM"
 	fi
 	as_index=`expr $as_index + 1`
 done
-# ファイル生成過程で鍵の生成も行う
 
 # 証明書をrpkiへ移動
 
 # コンテナ内でプロセスの立ち上げ
+echo "Starting daemons..."
+for asn in ${AS_NUMBER[@]}
+do
+	echo "docker exec -d --privileged pr_${PR_NAME}_as$asn zebra"
+	echo "docker exec -d --privileged pr_${PR_NAME}_as$asn bgpd"
 
+	eval SECF=\$SEC_FLAG_AS$asn
+	if [ $SECF -eq 1 ]	# BGPsec
+	then
+		echo "docker exec -d --privileged pr_${PR_NAME}_as$asn srx_server"
+	fi
+done
+echo "Finished!"

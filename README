@@ -1,0 +1,10 @@
+init_net.sh: 走らせることで、コンテナを立てて、ネットワークも構成する。入力としてConfigファイルを与えて実行。
+
+gen_zebra_bgpd_conf.sh: quagga_099224において、zebra.confファイルとbgpd.confファイルを生成するスクリプト。
+
+gen_zebra_bgpd_sec_conf.sh: srx_511において、zebra.confファイルとbgpd.confファイル、srx_server.confを生成するスクリプト。
+
+cert_setting.sh: 鍵を生成して、証明書を発行し、publishを行うスクリプト。
+
+quagga_099224: quaggaをインストールして、gen_zebra_bgpd_conf.shを/homeに設置したコンテナイメージ。
+srx_511: NIST-BGP-SRxをgit cloneして、各種buildツールをインストールしてbuild、そのPATHを通す。qsrx-make-certが求める/etc/”にょろ”のファイルをコピーして設置。cert_setting.shとgen_zebra_bgpd_sec_conf.shを/homeに設置したコンテナイメージ。
