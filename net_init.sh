@@ -54,11 +54,11 @@ i=0
 for asn in ${AS_NUMBER[@]}
 do
 	eval SECF=\$SEC_FLAG_AS$asn
-	if [ $SECF -eq 1 ]	# BGPsec
+	if [ $SECF -eq 1 ]	# BGPsec(PATHを通しているのでオプションが長い)
 	then
-		docker run -td --name pr_${PR_NAME}_as$asn ${SRX_CONTAINER_IMAGE}
+		docker run -td --privileged --name pr_${PR_NAME}_as$asn -e PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/home/NIST-BGP-SRx/local-5.1.1/bin:/home/NIST-BGP-SRx/local-5.1.1/sbin" ${SRX_CONTAINER_IMAGE}
 	else			# BGP
-		docker run -td --name pr_${PR_NAME}_as$asn ${QUAGGA_CONTAINER_IMAGE}
+		docker run -td --privileged --name pr_${PR_NAME}_as$asn ${QUAGGA_CONTAINER_IMAGE}
 	fi
 	docker network create --subnet ${BNET_ADDRESS_PREFIX}.$(expr $i + 1).0/24 pr_${PR_NAME}_bnet_as$asn
 	docker network connect --ip ${BNET_ADDRESS_PREFIX}.$(expr $i + 1).2 pr_${PR_NAME}_bnet_as$asn pr_${PR_NAME}_as$asn
@@ -83,7 +83,7 @@ done
 
 # RPKIを作って、全ASと接続
 echo "Setting security system..."
-docker run -td --name pr_${PR_NAME}_rpki ${SRX_CONTAINER_IMAGE}
+docker run -td --privileged --name pr_${PR_NAME}_rpki -e PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/home/NIST-BGP-SRx/local-5.1.1/bin:/home/NIST-BGP-SRx/local-5.1.1/sbin" ${SRX_CONTAINER_IMAGE}
 docker exec -d pr_${PR_NAME}_rpki mkdir /home/cert
 docker network create --subnet ${RNET_ADDRESS_PREFIX}.0/24 pr_${PR_NAME}_rnet
 RPKI_ADDRESS=${RNET_ADDRESS_PREFIX}.254
@@ -112,7 +112,7 @@ do
 		PARAM="$as_index $asn $BNET $PEER"
 		docker exec -d pr_${PR_NAME}_as$asn /home/gen_zebra_bgpd_conf.sh $PARAM
 	else			# BGPsec
-		docker exec -d pr_${PR_NAME}_as$asn /home/cert_setting.sh $asn	# 鍵生成と証明書作成
+		docker exec -d --privileged pr_${PR_NAME}_as$asn /bin/bash -c "/home/cert_setting.sh $asn"	# 鍵生成と証明書作成
 		PARAM="$as_index $asn $BNET $RPKI_ADDRESS $PEER"
 		docker exec -d pr_${PR_NAME}_as$asn /home/gen_zebra_bgpd_sec_conf.sh $PARAM
 		# 証明書をRPKIへ移動

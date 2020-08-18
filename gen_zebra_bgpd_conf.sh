@@ -5,8 +5,8 @@
 # input: AS_INDEX ASN BNET PEER_INFO
 #
 
-ZEBRA_CONF_FILE="/tmp/zebra.conf"
-BGPD_CONF_FILE="/tmp/bgpd.conf"
+ZEBRA_CONF_FILE="/etc/quagga/zebra.conf"
+BGPD_CONF_FILE="/etc/quagga/bgpd.conf"
 
 INTERFACE=($(echo $(ip addr | grep inet | grep eth | cut -f 11 -d' ' | tr '\n' ' ')))
 IP_ADDR=($(echo $(ip addr | grep inet | grep eth | cut -f 6 -d' ' | tr '\n' ' ')))

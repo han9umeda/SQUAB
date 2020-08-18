@@ -5,9 +5,9 @@
 # input: AS_INDEX ASN BNET RPKI_IP PEER_INFO
 #
 
-ZEBRA_CONF_FILE="/tmp/zebra.conf"
-BGPD_CONF_FILE="/tmp/bgpd.conf"
-SRX_SERVER_CONF_FILE="/tmp/srx_server.conf"
+ZEBRA_CONF_FILE="/home/NIST-BGP-SRx/local-5.1.1/etc/zebra.conf"
+BGPD_CONF_FILE="/home/NIST-BGP-SRx/local-5.1.1/etc/bgpd.conf"
+SRX_SERVER_CONF_FILE="/home/NIST-BGP-SRx/local-5.1.1/etc/srx_server.conf"
 
 INTERFACE=($(echo $(ip addr | grep inet | grep eth | cut -f 11 -d' ' | tr '\n' ' ')))
 IP_ADDR=($(echo $(ip addr | grep inet | grep eth | cut -f 6 -d' ' | tr '\n' ' ')))
