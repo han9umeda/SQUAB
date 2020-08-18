@@ -1,15 +1,15 @@
-#!/bin/bash
+#!/bin/bash -x
 #
 # SQUAB(Scalable QUagga-based Automated configuration on BGP)
 # net_init.sh
 #
-PR_NAME=tmp
+PR_NAME=testone
 QUAGGA_CONTAINER_IMAGE=quagga_099224
 SRX_CONTAINER_IMAGE=srx_511
 
-BNET_ADDRESS_PREFIX=192.168
-PNET_ADDRESS_PREFIX=172.17
-RNET_ADDRESS_PREFIX=172.16.0
+BNET_ADDRESS_PREFIX=191.168
+PNET_ADDRESS_PREFIX=171.17
+RNET_ADDRESS_PREFIX=171.16.0
 
 # 設定ファイルの読み込み
 echo "Import Config file..."
@@ -56,12 +56,12 @@ do
 	eval SECF=\$SEC_FLAG_AS$asn
 	if [ $SECF -eq 1 ]	# BGPsec
 	then
-		echo "docker run -d --name pr_${PR_NAME}_as$asn ${SRX_CONTAINER_IMAGE}"
+		docker run -td --name pr_${PR_NAME}_as$asn ${SRX_CONTAINER_IMAGE}
 	else			# BGP
-		echo "docker run -d --name pr_${PR_NAME}_as$asn ${QUAGGA_CONTAINER_IMAGE}"
+		docker run -td --name pr_${PR_NAME}_as$asn ${QUAGGA_CONTAINER_IMAGE}
 	fi
-	echo "docker network create --subnet ${BNET_ADDRESS_PREFIX}.$(expr $i + 1).0/24 pr_${PR_NAME}_bnet_as$asn"
-	echo "docker network connect --ip ${BNET_ADDRESS_PREFIX}.$(expr $i + 1).2/24 pr_${PR_NAME}_bnet_as$asn pr_${PR_NAME}_as$asn"
+	docker network create --subnet ${BNET_ADDRESS_PREFIX}.$(expr $i + 1).0/24 pr_${PR_NAME}_bnet_as$asn
+	docker network connect --ip ${BNET_ADDRESS_PREFIX}.$(expr $i + 1).2 pr_${PR_NAME}_bnet_as$asn pr_${PR_NAME}_as$asn
 	eval BNET_ADDRESS_AS$asn=${BNET_ADDRESS_PREFIX}.$(expr $i + 1).2/24
 	i=`expr $i + 1`
 done
@@ -72,31 +72,29 @@ for i in $(seq 0 $(expr ${#PEER_ARR1[@]} - 1))
 do
 	PEER1=${PEER_ARR1[i]}
 	PEER2=${PEER_ARR2[i]}
-	echo "docker network create --subnet ${PNET_ADDRESS_PREFIX}.$(expr $i + 1).0/24 pr_${PR_NAME}_pnet_$(expr $i + 1)"
-	echo "docker network connect --ip ${PNET_ADDRESS_PREFIX}.$(expr $i + 1).2/24 pr_${PR_NAME}_pnet_$(expr $i + 1) pr_${PR_NAME}_as${PEER1}"
-	echo "docker network connect --ip ${PNET_ADDRESS_PREFIX}.$(expr $i + 1).3/24 pr_${PR_NAME}_pnet_$(expr $i + 1) pr_${PR_NAME}_as${PEER2}"
+	docker network create --subnet ${PNET_ADDRESS_PREFIX}.$(expr $i + 1).0/24 pr_${PR_NAME}_pnet_$(expr $i + 1)
+	docker network connect --ip ${PNET_ADDRESS_PREFIX}.$(expr $i + 1).2 pr_${PR_NAME}_pnet_$(expr $i + 1) pr_${PR_NAME}_as${PEER1}
+	docker network connect --ip ${PNET_ADDRESS_PREFIX}.$(expr $i + 1).3 pr_${PR_NAME}_pnet_$(expr $i + 1) pr_${PR_NAME}_as${PEER2}
 	TMP=($PEER2 "${PNET_ADDRESS_PREFIX}.$(expr $i + 1).2/24")
 	eval PEER_INFO_AS$PEER1+=\(${TMP[@]}\)
 	TMP=($PEER1 "${PNET_ADDRESS_PREFIX}.$(expr $i + 1).3/24")
 	eval PEER_INFO_AS$PEER2+=\(${TMP[@]}\)
-	# eval "echo \${PEER_INFO_AS$PEER1[@]}"
-	# eval "echo \${PEER_INFO_AS$PEER2[@]}"
 done
 
 # RPKIを作って、全ASと接続
 echo "Setting security system..."
-echo "docker run -d --name pr_${PR_NAME}_rpki ${SRX_CONTAINER_IMAGE}"
-echo "docker exec -d pr_${PR_NAME}_rpki mkdir /home/cert"
-echo "docker network create --subnet ${RNET_ADDRESS_PREFIX}.0/24 pr_${PR_NAME}_rnet"
+docker run -td --name pr_${PR_NAME}_rpki ${SRX_CONTAINER_IMAGE}
+docker exec -d pr_${PR_NAME}_rpki mkdir /home/cert
+docker network create --subnet ${RNET_ADDRESS_PREFIX}.0/24 pr_${PR_NAME}_rnet
 RPKI_ADDRESS=${RNET_ADDRESS_PREFIX}.254
-echo "docker network connect --ip ${RPKI_ADDRESS}/24 pr_${PR_NAME}_rnet pr_${PR_NAME}_rpki"
+docker network connect --ip ${RPKI_ADDRESS} pr_${PR_NAME}_rnet pr_${PR_NAME}_rpki
 i=0
 for asn in ${AS_NUMBER[@]}
 do
 	eval SECF=\$SEC_FLAG_AS$asn
 	if [ $SECF -eq 1 ]	# BGPsec
 	then
-		echo "docker network connect --ip ${RNET_ADDRESS_PREFIX}.$(expr $i + 2)/24 pr_${PR_NAME}_rnet pr_${PR_NAME}_as$asn"
+		docker network connect --ip ${RNET_ADDRESS_PREFIX}.$(expr $i + 2) pr_${PR_NAME}_rnet pr_${PR_NAME}_as$asn
 		i=`expr $i + 1`
 	fi
 done
@@ -112,14 +110,14 @@ do
 	if [ $SECF -eq 0 ]	# BGP
 	then
 		PARAM="$as_index $asn $BNET $PEER"
-		echo "docker exec -d pr_${PR_NAME}_as$asn /home/gen_zebra_bgpd_conf.sh $PARAM"
+		docker exec -d pr_${PR_NAME}_as$asn /home/gen_zebra_bgpd_conf.sh $PARAM
 	else			# BGPsec
-		echo "docker exec -d pr_${PR_NAME}_as$asn /home/cert_setting.sh $asn"	# 鍵生成と証明書作成
+		docker exec -d pr_${PR_NAME}_as$asn /home/cert_setting.sh $asn	# 鍵生成と証明書作成
 		PARAM="$as_index $asn $BNET $RPKI_ADDRESS $PEER"
-		echo "docker exec -d pr_${PR_NAME}_as$asn /home/gen_zebra_bgpd_sec_conf.sh $PARAM"
+		docker exec -d pr_${PR_NAME}_as$asn /home/gen_zebra_bgpd_sec_conf.sh $PARAM
 		# 証明書をRPKIへ移動
-		echo "docker cp pr_${PR_NAME}_as$asn:/var/lib/bgpsec-keys/router_as$asn.cert /tmp"
-		echo "docker cp /tmp/router_as$asn.cert pr_${PR_NAME}_rpki:/home/cert"
+		docker cp pr_${PR_NAME}_as$asn:/var/lib/bgpsec-keys/router_as$asn.cert /tmp
+		docker cp /tmp/router_as$asn.cert pr_${PR_NAME}_rpki:/home/cert
 	fi
 	as_index=`expr $as_index + 1`
 done
@@ -129,13 +127,13 @@ done
 echo "Starting daemons..."
 for asn in ${AS_NUMBER[@]}
 do
-	echo "docker exec -d --privileged pr_${PR_NAME}_as$asn zebra"
-	echo "docker exec -d --privileged pr_${PR_NAME}_as$asn bgpd"
+	docker exec -d --privileged pr_${PR_NAME}_as$asn zebra
+	docker exec -d --privileged pr_${PR_NAME}_as$asn bgpd
 
 	eval SECF=\$SEC_FLAG_AS$asn
 	if [ $SECF -eq 1 ]	# BGPsec
 	then
-		echo "docker exec -d --privileged pr_${PR_NAME}_as$asn srx_server"
+		docker exec -d --privileged pr_${PR_NAME}_as$asn srx_server
 	fi
 done
 echo "Finished!"
