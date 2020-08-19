@@ -127,13 +127,14 @@ done
 echo "Starting daemons..."
 for asn in ${AS_NUMBER[@]}
 do
-	docker exec -d --privileged pr_${PR_NAME}_as$asn zebra
-	docker exec -d --privileged pr_${PR_NAME}_as$asn bgpd
-
 	eval SECF=\$SEC_FLAG_AS$asn
 	if [ $SECF -eq 1 ]	# BGPsec
 	then
 		docker exec -d --privileged pr_${PR_NAME}_as$asn srx_server
 	fi
+
+	docker exec -d --privileged pr_${PR_NAME}_as$asn zebra
+	docker exec -d --privileged pr_${PR_NAME}_as$asn bgpd
+
 done
 echo "Finished!"

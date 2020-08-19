@@ -1,6 +1,6 @@
 AS_Setting
 52 0
-83 0
+83 1
 123 0
 5487 0
 Peer_info

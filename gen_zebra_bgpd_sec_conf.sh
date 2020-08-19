@@ -87,7 +87,7 @@ cat $BGPD_CONF_FILE
 
 RPKI_IP=$4
 
-echo "verbose  = true;" >> $SRX_SERVER_CONF_FILE
+echo "verbose  = true;" > $SRX_SERVER_CONF_FILE
 echo "loglevel = 5;" >> $SRX_SERVER_CONF_FILE
 echo "log     = \"/var/log/srx_server.log\";" >> $SRX_SERVER_CONF_FILE
 echo "sync    = true;" >> $SRX_SERVER_CONF_FILE
@@ -96,7 +96,7 @@ echo "" >> $SRX_SERVER_CONF_FILE
 
 echo "console: {" >> $SRX_SERVER_CONF_FILE
 echo "  port = 17901;" >> $SRX_SERVER_CONF_FILE
-echo "  password = "x";" >> $SRX_SERVER_CONF_FILE
+echo "  password = \"x\";" >> $SRX_SERVER_CONF_FILE
 echo "};" >> $SRX_SERVER_CONF_FILE
 echo "" >> $SRX_SERVER_CONF_FILE
 
@@ -126,9 +126,9 @@ echo "" >> $SRX_SERVER_CONF_FILE
 
 echo "mapping: {" >> $SRX_SERVER_CONF_FILE
 echo "#The configuration allows 255 pre-configurations. client_0 is invalid" >> $SRX_SERVER_CONF_FILE
-echo "  client_1  = "2";" >> $SRX_SERVER_CONF_FILE
-echo "  client_10 = "10.0.0.1";" >> $SRX_SERVER_CONF_FILE
-echo "  client_25 = "10.1.1.2";" >> $SRX_SERVER_CONF_FILE
+echo "  client_1  = \"2\";" >> $SRX_SERVER_CONF_FILE
+echo "  client_10 = \"10.0.0.1\";" >> $SRX_SERVER_CONF_FILE
+echo "  client_25 = \"10.1.1.2\";" >> $SRX_SERVER_CONF_FILE
 echo "};" >> $SRX_SERVER_CONF_FILE
 
 cat $SRX_SERVER_CONF_FILE
