@@ -3,7 +3,7 @@
 # SQUAB(Scalable QUagga-based Automated configuration on BGP)
 # net_init.sh
 #
-PR_NAME=testone
+PR_NAME=test
 QUAGGA_CONTAINER_IMAGE=quagga_099224
 SRX_CONTAINER_IMAGE=srx_511
 
@@ -122,6 +122,16 @@ do
 	as_index=`expr $as_index + 1`
 done
 
+# PRKIにBGPsecルータの情報を持っていく(できれば、RPKIへの登録を自動化したい)
+echo "" > /tmp/info.txt
+for asn in ${AS_NUMBER[@]}
+do
+	echo $asn >> /tmp/info.txt
+	eval echo \$SEC_FLAG_AS$asn >> /tmp/info.txt
+	eval echo \$BNET_ADDRESS_AS$asn >> /tmp.info.txt
+done
+
+docker cp /tmp/info.txt pr_${PR_NAME}_rpki:/home/cert
 
 # コンテナ内でプロセスの立ち上げ
 echo "Starting daemons..."
