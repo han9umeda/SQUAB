@@ -127,8 +127,8 @@ echo "" > /tmp/info.txt
 for asn in ${AS_NUMBER[@]}
 do
 	echo $asn >> /tmp/info.txt
-	eval echo \$SEC_FLAG_AS$asn >> /tmp/info.txt
-	eval echo \$BNET_ADDRESS_AS$asn >> /tmp.info.txt
+	eval "echo \$SEC_FLAG_AS$asn >> /tmp/info.txt"
+	eval "echo \$BNET_ADDRESS_AS$asn >> /tmp/info.txt"
 done
 
 docker cp /tmp/info.txt pr_${PR_NAME}_rpki:/home/cert
