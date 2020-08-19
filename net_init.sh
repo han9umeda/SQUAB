@@ -1,4 +1,4 @@
-#!/bin/bash -x
+#!/bin/bash
 #
 # SQUAB(Scalable QUagga-based Automated configuration on BGP)
 # net_init.sh
@@ -62,7 +62,7 @@ do
 	fi
 	docker network create --subnet ${BNET_ADDRESS_PREFIX}.$(expr $i + 1).0/24 pr_${PR_NAME}_bnet_as$asn
 	docker network connect --ip ${BNET_ADDRESS_PREFIX}.$(expr $i + 1).2 pr_${PR_NAME}_bnet_as$asn pr_${PR_NAME}_as$asn
-	eval BNET_ADDRESS_AS$asn=${BNET_ADDRESS_PREFIX}.$(expr $i + 1).2/24
+	eval BNET_ADDRESS_AS$asn=${BNET_ADDRESS_PREFIX}.$(expr $i + 1).0/24
 	i=`expr $i + 1`
 done
 
@@ -112,9 +112,9 @@ do
 		PARAM="$as_index $asn $BNET $PEER"
 		docker exec -d pr_${PR_NAME}_as$asn /home/gen_zebra_bgpd_conf.sh $PARAM
 	else			# BGPsec
-		docker exec -d --privileged pr_${PR_NAME}_as$asn /bin/bash -c "/home/cert_setting.sh $asn"	# 鍵生成と証明書作成
+		docker exec -it --privileged pr_${PR_NAME}_as$asn /bin/bash -c "/home/cert_setting.sh $asn"	# 鍵生成と証明書作成
 		PARAM="$as_index $asn $BNET $RPKI_ADDRESS $PEER"
-		docker exec -d pr_${PR_NAME}_as$asn /home/gen_zebra_bgpd_sec_conf.sh $PARAM
+		docker exec -it pr_${PR_NAME}_as$asn /home/gen_zebra_bgpd_sec_conf.sh $PARAM
 		# 証明書をRPKIへ移動
 		docker cp pr_${PR_NAME}_as$asn:/var/lib/bgpsec-keys/router_as$asn.cert /tmp
 		docker cp /tmp/router_as$asn.cert pr_${PR_NAME}_rpki:/home/cert
