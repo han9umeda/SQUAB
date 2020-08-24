@@ -12,3 +12,5 @@ quagga_099224: quagga, expectをインストールして、gen_zebra_bgpd_conf.s
 srx_511: NIST-BGP-SRxをgit cloneして、各種buildツールをインストールしてbuild、そのPATHを通す。qsrx-make-certが求める/etc/qsrx-router-key.cnfのファイルをコピーして設置。cert_setting.shとgen_zebra_bgpd_sec_conf.shを/homeに設置したコンテナイメージ。
 cp srxcryptoapi.conf.sample srxcryptoapi.confも行う。
 expectコマンドもインストール。get_rtable.shを/homeに設置。
+
+Configフォルダ: net_init.shを実行する時に入力として与えるファイルのサンプル集
