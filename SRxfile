@@ -14,3 +14,4 @@ ENV PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/NIST-BGP
 
 COPY gen_zebra_bgpd_sec_conf.sh /home
 COPY get_rtable.sh /home
+COPY cert_setting.sh /home
