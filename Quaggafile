@@ -1,0 +1,11 @@
+#
+# SQUAB(Scalable QUagga-based Automated configuration on Bgp)
+#
+# software router "Quagga" image
+
+FROM centos:7
+
+RUN yum install -y quagga telnet expect
+
+COPY gen_zebra_bgpd_conf.sh /home
+COPY get_rtable.sh /home
