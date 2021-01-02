@@ -6,8 +6,6 @@ class AS_generator:
     self._number = number
     self._flag = flag
     self._address = address
-  def get_add(self):
-    return self._flag
 
 class Address_detabase:
   def __init__(self):
@@ -30,6 +28,18 @@ class Address_detabase:
       self.as_net_i += 1
 
     return self.as_net_dict[as_num]
+
+  def get_peer_address(self, peer1, peer2):
+
+    peer_ases = [peer1, peer2].sort() # 引数として与えられるAS番号の順番に依存しないようにするため
+    peer_key = str(peer_ases[0]) + "and" + str(peer_ases[1])
+
+    if not peer_key in self.peer_address_dict.keys():
+      self.peer_address_dict[peer_key] = self.PEER_ADDRESS_PREFIX + str(self.peer_address_i) + ".0/24"
+      self.peer_address_i += 1
+
+    return self.peer_address_dict[peer_key]
+
 
 
 args = sys.argv
