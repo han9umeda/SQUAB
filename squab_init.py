@@ -3,9 +3,23 @@ import yaml
 
 class AS_generator:
   def __init__(self, number, flag, address):
-    self._number = number
-    self._flag = flag
-    self._address = address
+    self.number = number
+    self.flag = flag
+    self.address = address
+
+    self.router_dict = {}
+
+  def make_peer_router_for(self, as_num, address):
+
+    if not as_num in self.router_dict.keys(): # 対応したルータがなければ、生成する
+      self.router_dict[as_num] = Router_generator(as_num, address)
+
+    return self.router_dict[as_num]
+
+class Router_generator:
+  def __init__(self, number, address):
+    self.for_number = number
+    self.address = address
 
 class Address_detabase:
   def __init__(self):
