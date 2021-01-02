@@ -16,10 +16,12 @@ class AS_generator:
 
     return self.router_dict[as_num]
 
+
 class Router_generator:
   def __init__(self, number, address):
     self.for_number = number
     self.address = address
+
 
 class Address_detabase:
   def __init__(self):
@@ -43,16 +45,25 @@ class Address_detabase:
 
     return self.as_net_dict[as_num]
 
-  def get_peer_address(self, peer1, peer2):
+  def get_peer_address(self, peer1, peer2, mode):
 
-    peer_ases = [peer1, peer2].sort() # 引数として与えられるAS番号の順番に依存しないようにするため
+    peer_ases = [peer1, peer2]
+    peer_ases.sort() # 引数として与えられるAS番号の順番に依存しないようにするため
+
     peer_key = str(peer_ases[0]) + "and" + str(peer_ases[1])
 
     if not peer_key in self.peer_address_dict.keys():
       self.peer_address_dict[peer_key] = self.PEER_ADDRESS_PREFIX + str(self.peer_address_i) + ".0/24"
       self.peer_address_i += 1
 
-    return self.peer_address_dict[peer_key]
+    if mode == "NET":
+      return self.peer_address_dict[peer_key]
+    elif mode == "SMALLER":
+      return self.peer_address_dict[peer_key][:-5] + ".2/24"
+    elif mode == "BIGGER":
+      return self.peer_address_dict[peer_key][:-5] + ".3/24"
+    else:
+      raise ValueError("mode incorrectly!")
 
 
 
@@ -68,3 +79,6 @@ as_generator_dict = {}
 for as_num in config["AS_Setting"].keys():
   as_generator_dict[as_num] = AS_generator(as_num, config["AS_Setting"][as_num]["flag"], address_database.get_as_net_address(as_num))
 
+for peer in config["Peer_info"]:
+  as_generator_dict[peer[0]].make_peer_router_for(peer[1], address_database.get_peer_address(peer[0], peer[1], "SMALLER"))
+  as_generator_dict[peer[1]].make_peer_router_for(peer[0], address_database.get_peer_address(peer[0], peer[1], "BIGGER"))
