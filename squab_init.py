@@ -9,19 +9,38 @@ class AS_generator:
 
     self.router_dict = {}
 
-  def make_peer_router_for(self, as_num, address):
+  def make_peer_router_for(self, as_num, address, network_name):
 
     if not as_num in self.router_dict.keys(): # 対応したルータがなければ、生成する
-      self.router_dict[as_num] = Router_generator(as_num, address)
+      self.router_dict[as_num] = Router_generator(self.number, as_num, address, network_name, self.flag)
 
     return self.router_dict[as_num]
 
+  def get_router_info(self):
+
+    router_info = {}
+    for rou_gen in self.router_dict.values():
+      router_info.update(rou_gen.get_router_info())
+
+    return router_info
+
 
 class Router_generator:
-  def __init__(self, number, address):
-    self.for_number = number
+  def __init__(self, on_as, for_as, address, network_name, flag):
+    self.on_as = on_as
+    self.for_as = for_as
     self.address = address
+    self.network_name = network_name
+    self.flag = flag
+    if flag == 0:
+      self.image = "quagga"
+    elif flag == 1:
+      self.image = "srx"
+    else:
+      raise ValueError("flag incorrectly")
 
+  def get_router_info(self):
+    return {"router_" + str(self.on_as) + "_for_" + str(self.for_as): {"image": self.image, "tty": "true", "networks": {self.network_name: {"ipv4_address": self.address}}}}
 
 class Address_detabase:
   def __init__(self):
@@ -83,6 +102,12 @@ class Address_detabase:
     return pnet_info
 
 
+def peer_network_name(peer1, peer2):
+  peer_ases = [peer1, peer2]
+  peer_ases.sort() # 引数として与えられるAS番号の順番に依存しないようにするため
+
+  return "pnet_" + str(peer_ases[0]) + "and" + str(peer_ases[1])
+
 args = sys.argv
 
 with open(args[1]) as file:
@@ -96,14 +121,17 @@ for as_num in config["AS_Setting"].keys():
   as_generator_dict[as_num] = AS_generator(as_num, config["AS_Setting"][as_num]["flag"], address_database.get_as_net_address(as_num))
 
 for peer in config["Peer_info"]:
-  as_generator_dict[peer[0]].make_peer_router_for(peer[1], address_database.get_peer_address(peer[0], peer[1], "SMALLER"))
-  as_generator_dict[peer[1]].make_peer_router_for(peer[0], address_database.get_peer_address(peer[0], peer[1], "BIGGER"))
+  as_generator_dict[peer[0]].make_peer_router_for(peer[1], address_database.get_peer_address(peer[0], peer[1], "SMALLER"), peer_network_name(peer[0], peer[1]))
+  as_generator_dict[peer[1]].make_peer_router_for(peer[0], address_database.get_peer_address(peer[0], peer[1], "BIGGER"), peer_network_name(peer[0], peer[1]))
 
 print("Making docker-compose.yml file.")
 
-
 compose_head = {'version': 3}
-compose_services = {'services': {'router': 'as'}}
+
+routers_info = {}
+for as_gen in as_generator_dict.values():
+  routers_info.update(as_gen.get_router_info())
+compose_services = {'services': routers_info}
 
 as_net_info = address_database.get_as_net_info()
 pnet_info = address_database.get_pnet_info()
