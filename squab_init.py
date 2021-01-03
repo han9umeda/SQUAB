@@ -19,8 +19,12 @@ class AS_generator:
   def get_router_info(self):
 
     router_info = {}
+    ip_i = 2
     for rou_gen in self.router_dict.values():
-      router_info.update(rou_gen.get_router_info())
+      rou_info = rou_gen.gen_router_info(self.address, ip_i)
+#      rou_info.values()["networks"]["as_net_" + str(self.number)]["ipv4_address"] = self.address[:-5] + "." + str(ip_i) + "/24"
+      ip_i += 1
+      router_info.update(rou_info)
 
     return router_info
 
@@ -39,8 +43,8 @@ class Router_generator:
     else:
       raise ValueError("flag incorrectly")
 
-  def get_router_info(self):
-    return {"router_" + str(self.on_as) + "_for_" + str(self.for_as): {"image": self.image, "tty": "true", "networks": {self.network_name: {"ipv4_address": self.address}}}}
+  def gen_router_info(self, as_ip_prefix, ip_i):
+    return {"router_" + str(self.on_as) + "_for_" + str(self.for_as): {"image": self.image, "tty": "true", "networks": {self.network_name: {"ipv4_address": self.address}, "as_net_" + str(self.on_as): {"ipv4_address": as_ip_prefix[:-5] + "." + str(ip_i) + "/24"}}}}
 
 class Address_detabase:
   def __init__(self):
