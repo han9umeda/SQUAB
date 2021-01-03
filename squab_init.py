@@ -44,7 +44,7 @@ class Router_generator:
       raise ValueError("flag incorrectly")
 
   def gen_router_info(self, as_ip_prefix, ip_i):
-    return {"router_" + str(self.on_as) + "_for_" + str(self.for_as): {"image": self.image, "tty": "true", "networks": {self.network_name: {"ipv4_address": self.address}, "as_net_" + str(self.on_as): {"ipv4_address": as_ip_prefix[:-5] + "." + str(ip_i) + "/24"}}}}
+    return {"router_" + str(self.on_as) + "_for_" + str(self.for_as): {"image": self.image, "tty": "true", "networks": {self.network_name: {"ipv4_address": self.address}, "as_net_" + str(self.on_as): {"ipv4_address": as_ip_prefix[:-5] + "." + str(ip_i)}}}}
 
 class Address_detabase:
   def __init__(self):
@@ -82,9 +82,9 @@ class Address_detabase:
     if mode == "NET":
       return self.peer_address_dict[peer_key]
     elif mode == "SMALLER":
-      return self.peer_address_dict[peer_key][:-5] + ".2/24"
+      return self.peer_address_dict[peer_key][:-5] + ".2"
     elif mode == "BIGGER":
-      return self.peer_address_dict[peer_key][:-5] + ".3/24"
+      return self.peer_address_dict[peer_key][:-5] + ".3"
     else:
       raise ValueError("mode incorrectly!")
 
@@ -130,7 +130,7 @@ for peer in config["Peer_info"]:
 
 print("Making docker-compose.yml file.")
 
-compose_head = {'version': 3}
+compose_head = {'version': '3'}
 
 routers_info = {}
 for as_gen in as_generator_dict.values():
