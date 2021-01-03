@@ -65,6 +65,15 @@ class Address_detabase:
     else:
       raise ValueError("mode incorrectly!")
 
+  def get_as_net_info(self):
+
+    as_net_info = {}
+    for as_num in self.as_net_dict.keys():
+      as_net_info["as_net_" + str(as_num)] = {"ipam": {"config": [{"subnet": self.as_net_dict[as_num]}]}}
+
+    return as_net_info
+
+
   def get_pnet_info(self):
 
     pnet_info = {}
@@ -92,11 +101,14 @@ for peer in config["Peer_info"]:
 
 print("Making docker-compose.yml file.")
 
-pnet_info = address_database.get_pnet_info()
 
 compose_head = {'version': 3}
 compose_services = {'services': {'router': 'as'}}
-compose_networks = {'networks': pnet_info}
+
+as_net_info = address_database.get_as_net_info()
+pnet_info = address_database.get_pnet_info()
+as_net_info.update(pnet_info)
+compose_networks = {'networks': as_net_info}
 
 with open('docker-compose.yml', 'w') as f:
   print(yaml.dump(compose_head), file=f)
