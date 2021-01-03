@@ -82,3 +82,15 @@ for as_num in config["AS_Setting"].keys():
 for peer in config["Peer_info"]:
   as_generator_dict[peer[0]].make_peer_router_for(peer[1], address_database.get_peer_address(peer[0], peer[1], "SMALLER"))
   as_generator_dict[peer[1]].make_peer_router_for(peer[0], address_database.get_peer_address(peer[0], peer[1], "BIGGER"))
+
+print("Making docker-compose.yml file.")
+
+for_yml = {'version': 3}
+for_yml2 = {'services': {'router': 'as'}}
+for_yml3 = {'networks': {'net': 'bs'}}
+
+with open('docker-compose.yml', 'w') as f:
+  print(yaml.dump(for_yml), file=f)
+with open('docker-compose.yml', 'a') as f:
+  print(yaml.dump(for_yml2), file=f)
+  print(yaml.dump(for_yml3), file=f)
