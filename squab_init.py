@@ -22,11 +22,28 @@ class AS_generator:
     ip_i = 2
     for rou_gen in self.router_dict.values():
       rou_info = rou_gen.gen_router_info(self.address, ip_i)
-#      rou_info.values()["networks"]["as_net_" + str(self.number)]["ipv4_address"] = self.address[:-5] + "." + str(ip_i) + "/24"
       ip_i += 1
       router_info.update(rou_info)
 
     return router_info
+
+  def get_quagga_router_list(self):
+
+    quagga_list = []
+    for router in self.router_dict.values():
+      if router.get_image() == "quagga":
+        quagga_list.append(router)
+
+    return quagga_list
+
+  def get_srx_router_list(self):
+
+    srx_list = []
+    for router in self.router_dict.values():
+      if router.get_image() == "srx":
+        srx_list.append(router)
+
+    return srx_list
 
 
 class Router_generator:
@@ -45,6 +62,10 @@ class Router_generator:
 
   def gen_router_info(self, as_ip_prefix, ip_i):
     return {"router_" + str(self.on_as) + "_for_" + str(self.for_as): {"image": self.image, "tty": "true", "networks": {self.network_name: {"ipv4_address": self.address}, "as_net_" + str(self.on_as): {"ipv4_address": as_ip_prefix[:-5] + "." + str(ip_i)}}}}
+
+  def get_image(self):
+    return self.image
+
 
 class Address_detabase:
   def __init__(self):
@@ -147,3 +168,11 @@ with open('docker-compose.yml', 'w') as f:
 with open('docker-compose.yml', 'a') as f:
   print(yaml.dump(compose_services), file=f)
   print(yaml.dump(compose_networks), file=f)
+
+quagga_list = []
+for as_gen in as_generator_dict.values():
+  quagga_list.extend(as_gen.get_quagga_router_list())
+
+srx_list = []
+for as_gen in as_generator_dict.values():
+  srx_list.extend(as_gen.get_srx_router_list())
