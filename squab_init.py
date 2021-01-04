@@ -1,5 +1,11 @@
+#
+# SQUAB(Scalable QUagga-based Automated configuration on BGP)
+# squab_init.py
+# input: squab_config_file.yml
+#
 import sys
 import yaml
+import subprocess
 
 class AS_generator:
   def __init__(self, number, flag, address):
@@ -65,6 +71,12 @@ class Router_generator:
 
   def get_image(self):
     return self.image
+
+  def get_on_as_num(self):
+    return self.on_as
+
+  def get_for_as_num(self):
+    return self.for_as
 
 
 class Address_detabase:
@@ -176,3 +188,7 @@ for as_gen in as_generator_dict.values():
 srx_list = []
 for as_gen in as_generator_dict.values():
   srx_list.extend(as_gen.get_srx_router_list())
+
+router_index = 1 # bgp router-id を一意に振るために利用
+for quagga in quagga_list:
+  print(["docker", "exec", "-d", "rouname", "/home/gen_zebra_bgpd_conf.sh", str(router_index), str(quagga.get_on_as_num()), address_database.get_as_net_address(quagga.get_on_as_num()), str(quagga.get_for_as_num())])
