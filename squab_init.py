@@ -4,6 +4,8 @@
 # input: squab_config_file.yml
 #
 import sys
+import os
+import re
 import yaml
 import subprocess
 
@@ -147,6 +149,17 @@ def peer_network_name(peer1, peer2):
 
 args = sys.argv
 
+match = re.search("\.yml$|\.yaml$", args[1])
+if match == None:
+  print("invalid file name. (.yml or .yaml)")
+  sys.exit(1)
+filename = os.path.basename(args[1])
+
+match = re.search("\.yml$|\.yaml$", filename)
+
+project_name = filename[:match.start()]
+print("Project name: " + project_name)
+
 with open(args[1]) as file:
   config = yaml.safe_load(file)
 
@@ -160,6 +173,12 @@ for as_num in config["AS_Setting"].keys():
 for peer in config["Peer_info"]:
   as_generator_dict[peer[0]].make_peer_router_for(peer[1], address_database.get_peer_address(peer[0], peer[1], "SMALLER"), peer_network_name(peer[0], peer[1]))
   as_generator_dict[peer[1]].make_peer_router_for(peer[0], address_database.get_peer_address(peer[0], peer[1], "BIGGER"), peer_network_name(peer[0], peer[1]))
+
+if os.path.isdir("./work_dir/" + project_name) == False:
+  print("Making working directory in ./work_dir .")
+  subprocess.call(["mkdir", "./work_dir/" + project_name])
+
+compose_file_path = './work_dir/' + project_name + '/docker-compose.yml'
 
 print("Making docker-compose.yml file.")
 
@@ -175,11 +194,13 @@ pnet_info = address_database.get_pnet_info()
 as_net_info.update(pnet_info)
 compose_networks = {'networks': as_net_info}
 
-with open('docker-compose.yml', 'w') as f:
+with open(compose_file_path, 'w') as f:
   print(yaml.dump(compose_head), file=f)
-with open('docker-compose.yml', 'a') as f:
+with open(compose_file_path, 'a') as f:
   print(yaml.dump(compose_services), file=f)
   print(yaml.dump(compose_networks), file=f)
+
+subprocess.call(["docker-compose", "-f", compose_file_path, "up", "-d"])
 
 quagga_list = []
 for as_gen in as_generator_dict.values():
