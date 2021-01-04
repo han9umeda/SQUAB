@@ -175,12 +175,12 @@ for peer in config["Peer_info"]:
   as_generator_dict[peer[1]].make_peer_router_for(peer[0], address_database.get_peer_address(peer[0], peer[1], "BIGGER"), peer_network_name(peer[0], peer[1]))
 
 if os.path.isdir("./work_dir/" + project_name) == False:
-  print("Making working directory in ./work_dir .")
+  print("Making working directory in ./work_dir...")
   subprocess.call(["mkdir", "./work_dir/" + project_name])
 
 compose_file_path = './work_dir/' + project_name + '/docker-compose.yml'
 
-print("Making docker-compose.yml file.")
+print("Making docker-compose.yml file...")
 
 compose_head = {'version': '3'}
 
@@ -200,8 +200,10 @@ with open(compose_file_path, 'a') as f:
   print(yaml.dump(compose_services), file=f)
   print(yaml.dump(compose_networks), file=f)
 
+print("Running docker-compose...")
 subprocess.call(["docker-compose", "-f", compose_file_path, "up", "-d"])
 
+print("Making config file in container...")
 quagga_list = []
 for as_gen in as_generator_dict.values():
   quagga_list.extend(as_gen.get_quagga_router_list())
@@ -212,4 +214,6 @@ for as_gen in as_generator_dict.values():
 
 router_index = 1 # bgp router-id を一意に振るために利用
 for quagga in quagga_list:
-  print(["docker", "exec", "-d", "rouname", "/home/gen_zebra_bgpd_conf.sh", str(router_index), str(quagga.get_on_as_num()), address_database.get_as_net_address(quagga.get_on_as_num()), str(quagga.get_for_as_num())])
+  rouname = project_name + "_router_" + str(quagga.get_on_as_num()) + "_for_" + str(quagga.get_for_as_num()) + "_1"
+  subprocess.call(["docker", "exec", "-d", rouname, "/home/gen_zebra_bgpd_conf.sh", str(router_index), str(quagga.get_on_as_num()), address_database.get_as_net_address(quagga.get_on_as_num()), str(quagga.get_for_as_num())])
+  router_index += 1
