@@ -18,20 +18,21 @@ class AS_generator:
 
     self.router_dict = {}
 
+    self.ip_i = 2 # ルータに一意のアドレスをつけるために利用
+
   def make_peer_router_for(self, as_num, address_database, peer_address_flag):
 
     if not as_num in self.router_dict.keys(): # 対応したルータがなければ、生成する
-      self.router_dict[as_num] = Router_generator(self.number, as_num, address_database, peer_address_flag, self.flag, self)
+      self.router_dict[as_num] = Router_generator(self.number, as_num, address_database, peer_address_flag, self.flag, self, self.ip_i)
+      self.ip_i += 1
 
     return self.router_dict[as_num]
 
   def get_router_info(self):
 
     router_info = {}
-    ip_i = 2
     for rou_gen in self.router_dict.values():
-      rou_info = rou_gen.gen_router_info(self.address, ip_i)
-      ip_i += 1
+      rou_info = rou_gen.get_router_info()
       router_info.update(rou_info)
 
     return router_info
@@ -59,11 +60,12 @@ class AS_generator:
 
 
 class Router_generator:
-  def __init__(self, on_as, for_as, address_database, peer_address_flag, flag, as_gen):
+  def __init__(self, on_as, for_as, address_database, peer_address_flag, flag, as_gen, ip_i):
     self.on_as = on_as
     self.for_as = for_as
     self.address_database = address_database
     self.as_network_address = address_database.get_as_net_address(as_gen)
+    self.intra_as_address = self.as_network_address[:-5] + "." + str(ip_i)
     self.peer_address = address_database.get_peer_address(on_as, for_as, peer_address_flag)
     if peer_address_flag == "SMALLER":
       self.peer_address_opposite = address_database.get_peer_address(on_as, for_as, "BIGGER")
@@ -82,11 +84,11 @@ class Router_generator:
     else:
       raise ValueError("flag incorrectly")
 
-  def gen_router_info(self, as_ip_prefix, ip_i):
+  def get_router_info(self):
     if self.image == "quagga":
-      return {"router_" + str(self.on_as) + "_for_" + str(self.for_as): {"image": self.image, "tty": "true", "networks": {self.network_name: {"ipv4_address": self.peer_address}, "as_net_" + str(self.on_as): {"ipv4_address": as_ip_prefix[:-5] + "." + str(ip_i)}}}}
+      return {"router_" + str(self.on_as) + "_for_" + str(self.for_as): {"image": self.image, "tty": "true", "networks": {self.network_name: {"ipv4_address": self.peer_address}, "as_net_" + str(self.on_as): {"ipv4_address": self.intra_as_address}}}}
     elif self.image == "srx":
-      return {"router_" + str(self.on_as) + "_for_" + str(self.for_as): {"image": self.image, "tty": "true", "networks": {self.network_name: {"ipv4_address": self.peer_address}, "as_net_" + str(self.on_as): {"ipv4_address": as_ip_prefix[:-5] + "." + str(ip_i)}, "rnet": {"ipv4_address": self.rnet_address}}}}
+      return {"router_" + str(self.on_as) + "_for_" + str(self.for_as): {"image": self.image, "tty": "true", "networks": {self.network_name: {"ipv4_address": self.peer_address}, "as_net_" + str(self.on_as): {"ipv4_address": self.intra_as_address}, "rnet": {"ipv4_address": self.rnet_address}}}}
 
   def get_image(self):
     return self.image
