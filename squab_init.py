@@ -96,6 +96,9 @@ class Router_generator:
   def get_as_network_address(self):
     return self.as_network_address
 
+  def get_peer_address(self):
+    return self.peer_address
+
 class RPKI_generator:
   def __init__(self, rpki_net_address):
     self.address = rpki_net_address[:-5] + ".254"
@@ -258,10 +261,22 @@ for as_gen in as_generator_dict.values():
 router_index = 1 # bgp router-id を一意に振るために利用
 for quagga in quagga_list:
   rouname = project_name + "_router_" + str(quagga.get_on_as_num()) + "_for_" + str(quagga.get_for_as_num()) + "_1"
-  subprocess.call(["docker", "exec", "-d", rouname, "/home/gen_zebra_bgpd_conf.sh", str(router_index), str(quagga.get_on_as_num()), quagga.get_as_network_address(), str(quagga.get_for_as_num())])
+  subprocess.call(["docker", "exec", "-d", rouname, "/home/gen_zebra_bgpd_conf.sh", str(router_index), str(quagga.get_on_as_num()), quagga.get_as_network_address(), str(quagga.get_for_as_num()), quagga.get_peer_address()])
   router_index += 1
 
 for srx in srx_list:
   rouname = project_name + "_router_" + str(srx.get_on_as_num()) + "_for_" + str(srx.get_for_as_num()) + "_1"
-  print(["docker", "exec", "-d", rouname, "/home/gen_zebra_bgpd_sec_conf.sh", str(router_index), str(srx.get_on_as_num()), srx.get_as_network_address(), rpki_generator.get_rpki_address(), str(srx.get_for_as_num())])
+  subprocess.call(["docker", "exec", "-d", rouname, "/home/gen_zebra_bgpd_sec_conf.sh", str(router_index), str(srx.get_on_as_num()), srx.get_as_network_address(), rpki_generator.get_rpki_address(), str(srx.get_for_as_num()), str(srx.get_peer_address())])
   router_index += 1
+
+print("Starting daemons...")
+for quagga in quagga_list:
+  rouname = project_name + "_router_" + str(quagga.get_on_as_num()) + "_for_" + str(quagga.get_for_as_num()) + "_1"
+  subprocess.call(["docker", "exec", "-d", "--privileged", rouname, "zebra"])
+  subprocess.call(["docker", "exec", "-d", "--privileged", rouname, "bgpd"])
+
+for srx in srx_list:
+  rouname = project_name + "_router_" + str(srx.get_on_as_num()) + "_for_" + str(srx.get_for_as_num()) + "_1"
+  subprocess.call(["docker", "exec", "-d", "--privileged", rouname, "srx_server"])
+  subprocess.call(["docker", "exec", "-d", "--privileged", rouname, "zebra"])
+  subprocess.call(["docker", "exec", "-d", "--privileged", rouname, "bgpd"])
