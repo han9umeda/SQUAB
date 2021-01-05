@@ -65,6 +65,10 @@ class Router_generator:
     self.address_database = address_database
     self.as_network_address = address_database.get_as_net_address(as_gen)
     self.peer_address = address_database.get_peer_address(on_as, for_as, peer_address_flag)
+    if peer_address_flag == "SMALLER":
+      self.peer_address_opposite = address_database.get_peer_address(on_as, for_as, "BIGGER")
+    elif peer_address_flag == "BIGGER":
+      self.peer_address_opposite = address_database.get_peer_address(on_as, for_as, "SMALLER")
 
     peer_ases = [on_as, for_as]
     peer_ases.sort() # 引数として与えられるAS番号の順番に依存しないようにするため
@@ -98,6 +102,9 @@ class Router_generator:
 
   def get_peer_address(self):
     return self.peer_address
+
+  def get_peer_address_opposite(self):
+    return self.peer_address_opposite
 
 class RPKI_generator:
   def __init__(self, rpki_net_address):
@@ -261,12 +268,12 @@ for as_gen in as_generator_dict.values():
 router_index = 1 # bgp router-id を一意に振るために利用
 for quagga in quagga_list:
   rouname = project_name + "_router_" + str(quagga.get_on_as_num()) + "_for_" + str(quagga.get_for_as_num()) + "_1"
-  subprocess.call(["docker", "exec", "-d", rouname, "/home/gen_zebra_bgpd_conf.sh", str(router_index), str(quagga.get_on_as_num()), quagga.get_as_network_address(), str(quagga.get_for_as_num()), quagga.get_peer_address()])
+  subprocess.call(["docker", "exec", "-d", rouname, "/home/gen_zebra_bgpd_conf.sh", str(router_index), str(quagga.get_on_as_num()), quagga.get_as_network_address(), str(quagga.get_for_as_num()), quagga.get_peer_address_opposite()])
   router_index += 1
 
 for srx in srx_list:
   rouname = project_name + "_router_" + str(srx.get_on_as_num()) + "_for_" + str(srx.get_for_as_num()) + "_1"
-  subprocess.call(["docker", "exec", "-d", rouname, "/home/gen_zebra_bgpd_sec_conf.sh", str(router_index), str(srx.get_on_as_num()), srx.get_as_network_address(), rpki_generator.get_rpki_address(), str(srx.get_for_as_num()), str(srx.get_peer_address())])
+  subprocess.call(["docker", "exec", "-d", rouname, "/home/gen_zebra_bgpd_sec_conf.sh", str(router_index), str(srx.get_on_as_num()), srx.get_as_network_address(), rpki_generator.get_rpki_address(), str(srx.get_for_as_num()), str(srx.get_peer_address_opposite())])
   router_index += 1
 
 print("Starting daemons...")
