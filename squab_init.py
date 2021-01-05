@@ -103,6 +103,9 @@ class RPKI_generator:
   def get_rpki_info(self):
     return {"rpki": {"image": "srx", "tty": "true", "networks": {"rnet": {"ipv4_address": self.address}}}}
 
+  def get_rpki_address(self):
+    return self.address
+
 class Address_detabase:
   def __init__(self):
     self.AS_NET_ADDRESS_PREFIX = "191.168."
@@ -260,5 +263,5 @@ for quagga in quagga_list:
 
 for srx in srx_list:
   rouname = project_name + "_router_" + str(srx.get_on_as_num()) + "_for_" + str(srx.get_for_as_num()) + "_1"
-  print(["docker", "exec", "-d", rouname, "/home/gen_zebra_bgpd_sec_conf.sh", str(router_index), str(srx.get_on_as_num()), srx.get_as_network_address(), str(srx.get_for_as_num())])
+  print(["docker", "exec", "-d", rouname, "/home/gen_zebra_bgpd_sec_conf.sh", str(router_index), str(srx.get_on_as_num()), srx.get_as_network_address(), rpki_generator.get_rpki_address(), str(srx.get_for_as_num())])
   router_index += 1

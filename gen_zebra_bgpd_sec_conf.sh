@@ -2,7 +2,7 @@
 #
 # SQUAB(Scalable QUagga-based Automated configuration on BGP)
 # gen_zebra_bgpd_sec_conf.sh
-# input: AS_INDEX ASN BNET RPKI_IP PEER_INFO
+# input: ROUTER_INDEX ASN BNET RPKI_IP PEER_INFO
 #
 
 ZEBRA_CONF_FILE="/NIST-BGP-SRx-master/local-5.1.1/etc/zebra.conf"
@@ -32,7 +32,7 @@ do
 done
 cat $ZEBRA_CONF_FILE
 
-AS_INDEX=$1
+ROUTER_INDEX=$1
 ASN=$2
 BNET=$3
 
@@ -51,7 +51,7 @@ echo "log stdout" >> $BGPD_CONF_FILE
 echo "!" >> $BGPD_CONF_FILE
 
 echo "router bgp $ASN" >> $BGPD_CONF_FILE
-echo " bgp router-id 10.10.10.$AS_INDEX" >> $BGPD_CONF_FILE
+echo " bgp router-id 10.10.10.$ROUTER_INDEX" >> $BGPD_CONF_FILE
 echo " network $BNET" >> $BGPD_CONF_FILE
 for i in $(seq 0 2 $(expr ${#PEER[@]} - 1))
 do
@@ -64,7 +64,7 @@ echo " srx bgpsec ski 0 1 `qsrx-view-subject router_as$ASN`" >> $BGPD_CONF_FILE
 echo "!" >> $BGPD_CONF_FILE
 
 echo " ! SRx Basic Configuration Settings" >> $BGPD_CONF_FILE
-echo " srx set-proxy-id 172.18.0.$AS_INDEX" >> $BGPD_CONF_FILE
+echo " srx set-proxy-id 172.18.0.$ROUTER_INDEX" >> $BGPD_CONF_FILE
 echo " srx set-server localhost 17900" >> $BGPD_CONF_FILE
 echo " srx keep-window 900" >> $BGPD_CONF_FILE
 echo " srx evaluation origin_only" >> $BGPD_CONF_FILE
