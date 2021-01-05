@@ -21,7 +21,7 @@ class AS_generator:
   def make_peer_router_for(self, as_num, address_database, peer_address_flag):
 
     if not as_num in self.router_dict.keys(): # 対応したルータがなければ、生成する
-      self.router_dict[as_num] = Router_generator(self.number, as_num, address_database, peer_address_flag, self.flag)
+      self.router_dict[as_num] = Router_generator(self.number, as_num, address_database, peer_address_flag, self.flag, self)
 
     return self.router_dict[as_num]
 
@@ -59,10 +59,11 @@ class AS_generator:
 
 
 class Router_generator:
-  def __init__(self, on_as, for_as, address_database, peer_address_flag, flag):
+  def __init__(self, on_as, for_as, address_database, peer_address_flag, flag, as_gen):
     self.on_as = on_as
     self.for_as = for_as
     self.address_database = address_database
+    self.as_network_address = address_database.get_as_net_address(as_gen)
     self.peer_address = address_database.get_peer_address(on_as, for_as, peer_address_flag)
 
     peer_ases = [on_as, for_as]
@@ -91,6 +92,9 @@ class Router_generator:
 
   def get_for_as_num(self):
     return self.for_as
+
+  def get_as_network_address(self):
+    return self.as_network_address
 
 class RPKI_generator:
   def __init__(self, rpki_net_address):
@@ -251,10 +255,10 @@ for as_gen in as_generator_dict.values():
 router_index = 1 # bgp router-id を一意に振るために利用
 for quagga in quagga_list:
   rouname = project_name + "_router_" + str(quagga.get_on_as_num()) + "_for_" + str(quagga.get_for_as_num()) + "_1"
-  subprocess.call(["docker", "exec", "-d", rouname, "/home/gen_zebra_bgpd_conf.sh", str(router_index), str(quagga.get_on_as_num()), address_database.get_as_net_address(quagga.get_on_as_num()), str(quagga.get_for_as_num())])
+  subprocess.call(["docker", "exec", "-d", rouname, "/home/gen_zebra_bgpd_conf.sh", str(router_index), str(quagga.get_on_as_num()), quagga.get_as_network_address(), str(quagga.get_for_as_num())])
   router_index += 1
 
 for srx in srx_list:
   rouname = project_name + "_router_" + str(srx.get_on_as_num()) + "_for_" + str(srx.get_for_as_num()) + "_1"
-  print(["docker", "exec", "-d", rouname, "/home/gen_zebra_bgpd_conf.sh", str(router_index), str(quagga.get_on_as_num()), address_database.get_as_net_address(quagga.get_on_as_num()), str(quagga.get_for_as_num())])
+  print(["docker", "exec", "-d", rouname, "/home/gen_zebra_bgpd_sec_conf.sh", str(router_index), str(srx.get_on_as_num()), srx.get_as_network_address(), str(srx.get_for_as_num())])
   router_index += 1
