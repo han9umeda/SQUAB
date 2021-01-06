@@ -58,6 +58,14 @@ class AS_generator:
   def get_as_number(self):
     return self.number
 
+  def get_router_address_list(self):
+
+    address_list = []
+    for rou in self.router_dict.values():
+      address_list.append(rou.get_intra_as_address())
+
+    return address_list
+
 
 class Router_generator:
   def __init__(self, on_as, for_as, address_database, peer_address_flag, flag, as_gen, ip_i):
@@ -107,6 +115,9 @@ class Router_generator:
 
   def get_peer_address_opposite(self):
     return self.peer_address_opposite
+
+  def get_intra_as_address(self):
+    return self.intra_as_address
 
 class RPKI_generator:
   def __init__(self, rpki_net_address):
@@ -270,7 +281,13 @@ for as_gen in as_generator_dict.values():
 router_index = 1 # bgp router-id を一意に振るために利用
 for quagga in quagga_list:
   rouname = project_name + "_router_" + str(quagga.get_on_as_num()) + "_for_" + str(quagga.get_for_as_num()) + "_1"
-  subprocess.call(["docker", "exec", "-d", rouname, "/home/gen_zebra_bgpd_conf.sh", str(router_index), str(quagga.get_on_as_num()), quagga.get_as_network_address(), str(quagga.get_for_as_num()), quagga.get_peer_address_opposite()])
+  if len(as_generator_dict[quagga.get_on_as_num()].get_router_address_list()) == 1: # There is one router in the AS.
+    neighbor_intra_router_address = ""
+  else: # There is some routers in the AS.
+    neighbor_intra_router_address = as_generator_dict[quagga.get_on_as_num()].get_router_address_list()
+    neighbor_intra_router_address.remove(quagga.get_intra_as_address())
+    neighbor_intra_router_address = ' '.join(neighbor_intra_router_address)
+  subprocess.call(["docker", "exec", "-d", rouname, "/home/gen_zebra_bgpd_conf.sh", str(router_index), str(quagga.get_on_as_num()), quagga.get_as_network_address(), str(quagga.get_for_as_num()), quagga.get_peer_address_opposite(), neighbor_intra_router_address])
   router_index += 1
 
 for srx in srx_list:
@@ -289,3 +306,5 @@ for srx in srx_list:
   subprocess.call(["docker", "exec", "-d", "--privileged", rouname, "srx_server"])
   subprocess.call(["docker", "exec", "-d", "--privileged", rouname, "zebra"])
   subprocess.call(["docker", "exec", "-d", "--privileged", rouname, "bgpd"])
+
+print("Finished!")
