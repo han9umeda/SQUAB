@@ -84,6 +84,8 @@ class Router_generator:
     peer_ases.sort() # 引数として与えられるAS番号の順番に依存しないようにするため
     self.network_name = "pnet_" + str(peer_ases[0]) + "and" + str(peer_ases[1])
 
+    self.router_name = "router_" + str(self.on_as) + "_for_" + str(self.for_as)
+
     if flag == 0:
       self.image = "quagga"
     elif flag == 1:
@@ -94,9 +96,9 @@ class Router_generator:
 
   def get_router_info(self):
     if self.image == "quagga":
-      return {"router_" + str(self.on_as) + "_for_" + str(self.for_as): {"image": self.image, "tty": "true", "networks": {self.network_name: {"ipv4_address": self.peer_address}, "as_net_" + str(self.on_as): {"ipv4_address": self.intra_as_address}}}}
+      return {self.router_name: {"image": self.image, "tty": "true", "networks": {self.network_name: {"ipv4_address": self.peer_address}, "as_net_" + str(self.on_as): {"ipv4_address": self.intra_as_address}}}}
     elif self.image == "srx":
-      return {"router_" + str(self.on_as) + "_for_" + str(self.for_as): {"image": self.image, "tty": "true", "networks": {self.network_name: {"ipv4_address": self.peer_address}, "as_net_" + str(self.on_as): {"ipv4_address": self.intra_as_address}, "rnet": {"ipv4_address": self.rnet_address}}}}
+      return {self.router_name: {"image": self.image, "tty": "true", "networks": {self.network_name: {"ipv4_address": self.peer_address}, "as_net_" + str(self.on_as): {"ipv4_address": self.intra_as_address}, "rnet": {"ipv4_address": self.rnet_address}}}}
 
   def get_image(self):
     return self.image
