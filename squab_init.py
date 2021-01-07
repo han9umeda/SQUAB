@@ -15,6 +15,7 @@ class AS_generator:
     self.flag = flag
     self.address_database = address_database
     self.address = address_database.get_as_net_address(self)
+    self.as_network_name = "as_net_" + str(self.number)
 
     self.router_dict = {}
 
@@ -23,7 +24,7 @@ class AS_generator:
   def make_peer_router_for(self, as_num, address_database, peer_address_flag):
 
     if not as_num in self.router_dict.keys(): # 対応したルータがなければ、生成する
-      self.router_dict[as_num] = Router_generator(self.number, as_num, address_database, peer_address_flag, self.flag, self, self.ip_i)
+      self.router_dict[as_num] = Router_generator(self.number, as_num, address_database, peer_address_flag, self.flag, self, self.ip_i, self.as_network_name)
       self.ip_i += 1
 
     return self.router_dict[as_num]
@@ -66,9 +67,12 @@ class AS_generator:
 
     return address_list
 
+  def get_as_network_name(self):
+    return self.as_network_name
+
 
 class Router_generator:
-  def __init__(self, on_as, for_as, address_database, peer_address_flag, flag, as_gen, ip_i):
+  def __init__(self, on_as, for_as, address_database, peer_address_flag, flag, as_gen, ip_i, as_network_name):
     self.on_as = on_as
     self.for_as = for_as
     self.address_database = address_database
@@ -83,6 +87,7 @@ class Router_generator:
     peer_ases = [on_as, for_as]
     peer_ases.sort() # 引数として与えられるAS番号の順番に依存しないようにするため
     self.network_name = "pnet_" + str(peer_ases[0]) + "and" + str(peer_ases[1])
+    self.as_network_name = as_network_name
 
     self.router_name = "router_" + str(self.on_as) + "_for_" + str(self.for_as)
 
@@ -96,9 +101,10 @@ class Router_generator:
 
   def get_router_info(self):
     if self.image == "quagga":
-      return {self.router_name: {"image": self.image, "tty": "true", "networks": {self.network_name: {"ipv4_address": self.peer_address}, "as_net_" + str(self.on_as): {"ipv4_address": self.intra_as_address}}}}
+      # return {self.router_name: {"image": self.image, "tty": "true", "networks": {self.network_name: {"ipv4_address": self.peer_address}, "as_net_" + str(self.on_as): {"ipv4_address": self.intra_as_address}}}}
+      return {self.router_name: {"image": self.image, "tty": "true", "networks": {self.network_name: {"ipv4_address": self.peer_address}, self.as_network_name: {}}}}
     elif self.image == "srx":
-      return {self.router_name: {"image": self.image, "tty": "true", "networks": {self.network_name: {"ipv4_address": self.peer_address}, "as_net_" + str(self.on_as): {"ipv4_address": self.intra_as_address}, "rnet": {"ipv4_address": self.rnet_address}}}}
+      return {self.router_name: {"image": self.image, "tty": "true", "networks": {self.network_name: {"ipv4_address": self.peer_address}, self.as_network_name: {"ipv4_address": self.intra_as_address}, "rnet": {"ipv4_address": self.rnet_address}}}}
 
   def get_image(self):
     return self.image
@@ -270,6 +276,12 @@ with open(compose_file_path, 'a') as f:
 
 print("Running docker-compose...")
 subprocess.call(["docker-compose", "-f", compose_file_path, "up", "-d"])
+
+for as_gen in as_generator_dict.values():
+  cmd = "docker network inspect " + project_name + "_" + as_gen.get_as_network_name()
+  ret_val = subprocess.run(cmd.split(), stdout=subprocess.PIPE)
+  net_info = yaml.safe_load(ret_val.stdout)
+  print(net_info)
 
 print("Making config file in container...")
 quagga_list = []
