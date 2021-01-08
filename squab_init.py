@@ -188,7 +188,8 @@ class Address_detabase:
 
     as_net_info = {}
     for as_gen in self.as_net_dict.keys():
-      as_net_info["as_net_" + str(as_gen.get_as_number())] = {"ipam": {"config": [{"subnet": self.as_net_dict[as_gen]}]}}
+      # as_net_info["as_net_" + str(as_gen.get_as_number())] = {"ipam": {"config": [{"subnet": self.as_net_dict[as_gen]}]}}
+      as_net_info[as_gen.get_as_network_name()] = {}
 
     return as_net_info
 
@@ -288,13 +289,24 @@ print("Running docker-compose...")
 subprocess.call(["docker-compose", "-f", compose_file_path, "up", "-d"])
 
 print("Collecting assigned IP address...")
+
+
+as_network_ip_dict = {}
 intra_as_ip_dict = {}
 for as_gen in as_generator_dict.values():
   cmd = "docker network inspect " + project_name + "_" + as_gen.get_as_network_name()
   ret_val = subprocess.run(cmd.split(), stdout=subprocess.PIPE)
   net_info = yaml.safe_load(ret_val.stdout)
+
+  # collecting as network address
+  as_network_ip_dict.update({net_info[0]["Name"]: net_info[0]["IPAM"]["Config"][0]["Subnet"]})
+
+  # collecting router intra AS IP address
   for con in net_info[0]["Containers"].values():
     intra_as_ip_dict.update({con["Name"]: con["IPv4Address"].split("/")[0]})
+
+print("DEBUG")
+print(as_network_ip_dict)
 
 routers_list = []
 for as_gen in as_generator_dict.values():
