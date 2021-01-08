@@ -312,7 +312,7 @@ for as_gen in as_generator_dict.values():
 
 router_index = 1 # bgp router-id を一意に振るために利用
 for quagga in quagga_list:
-  rouname = project_name + "_router_" + str(quagga.get_on_as_num()) + "_for_" + str(quagga.get_for_as_num()) + "_1"
+  rouname = project_name + "_" + quagga.get_router_name() + "_1"
   if len(as_generator_dict[quagga.get_on_as_num()].get_router_address_list()) == 1: # There is one router in the AS.
     neighbor_intra_router_address = ""
   else: # There is some routers in the AS.
@@ -323,18 +323,18 @@ for quagga in quagga_list:
   router_index += 1
 
 for srx in srx_list:
-  rouname = project_name + "_router_" + str(srx.get_on_as_num()) + "_for_" + str(srx.get_for_as_num()) + "_1"
+  rouname = project_name + "_" + quagga.get_router_name() + "_1"
   subprocess.call(["docker", "exec", "-d", rouname, "/home/gen_zebra_bgpd_sec_conf.sh", str(router_index), str(srx.get_on_as_num()), srx.get_as_network_address(), rpki_generator.get_rpki_address(), str(srx.get_for_as_num()), str(srx.get_peer_address_opposite())])
   router_index += 1
 
 print("Starting daemons...")
 for quagga in quagga_list:
-  rouname = project_name + "_router_" + str(quagga.get_on_as_num()) + "_for_" + str(quagga.get_for_as_num()) + "_1"
+  rouname = project_name + "_" + quagga.get_router_name() + "_1"
   subprocess.call(["docker", "exec", "-d", "--privileged", rouname, "zebra"])
   subprocess.call(["docker", "exec", "-d", "--privileged", rouname, "bgpd"])
 
 for srx in srx_list:
-  rouname = project_name + "_router_" + str(srx.get_on_as_num()) + "_for_" + str(srx.get_for_as_num()) + "_1"
+  rouname = project_name + "_" + quagga.get_router_name() + "_1"
   subprocess.call(["docker", "exec", "-d", "--privileged", rouname, "srx_server"])
   subprocess.call(["docker", "exec", "-d", "--privileged", rouname, "zebra"])
   subprocess.call(["docker", "exec", "-d", "--privileged", rouname, "bgpd"])
