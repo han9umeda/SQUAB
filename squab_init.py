@@ -19,13 +19,10 @@ class AS_generator:
 
     self.router_dict = {}
 
-    self.ip_i = 2 # ルータに一意のアドレスをつけるために利用
-
   def make_peer_router_for(self, as_num, address_database, peer_address_flag):
 
     if not as_num in self.router_dict.keys(): # 対応したルータがなければ、生成する
-      self.router_dict[as_num] = Router_generator(self.number, as_num, address_database, peer_address_flag, self.flag, self, self.ip_i, self.as_network_name)
-      self.ip_i += 1
+      self.router_dict[as_num] = Router_generator(self.number, as_num, address_database, peer_address_flag, self.flag, self, self.as_network_name)
 
     return self.router_dict[as_num]
 
@@ -75,12 +72,11 @@ class AS_generator:
 
 
 class Router_generator:
-  def __init__(self, on_as, for_as, address_database, peer_address_flag, flag, as_gen, ip_i, as_network_name):
+  def __init__(self, on_as, for_as, address_database, peer_address_flag, flag, as_gen, as_network_name):
     self.on_as = on_as
     self.for_as = for_as
     self.address_database = address_database
     self.as_network_address = address_database.get_as_net_address(as_gen)
-    self.intra_as_address = self.as_network_address[:-5] + "." + str(ip_i)
     self.peer_address = address_database.get_peer_address(on_as, for_as, peer_address_flag)
     if peer_address_flag == "SMALLER":
       self.peer_address_opposite = address_database.get_peer_address(on_as, for_as, "BIGGER")
@@ -126,14 +122,15 @@ class Router_generator:
   def get_peer_address_opposite(self):
     return self.peer_address_opposite
 
+  def set_intra_as_address(self, ip):
+    self.intra_as_address = ip
+
   def get_intra_as_address(self):
     return self.intra_as_address
 
   def get_router_name(self):
     return self.router_name
 
-  def set_intra_as_address(self, ip):
-    self.intra_as_address = ip
 
 class RPKI_generator:
   def __init__(self, rpki_net_address):
@@ -218,11 +215,16 @@ class Address_detabase:
   def get_rnet_info(self):
     return {"rnet": {"ipam": {"config": [{"subnet": self.get_rnet_address()}]}}}
 
+
 def peer_network_name(peer1, peer2):
   peer_ases = [peer1, peer2]
   peer_ases.sort() # 引数として与えられるAS番号の順番に依存しないようにするため
 
   return "pnet_" + str(peer_ases[0]) + "and" + str(peer_ases[1])
+
+###
+### MAIN PROGRAM
+###
 
 args = sys.argv
 
