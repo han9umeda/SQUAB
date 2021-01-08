@@ -70,6 +70,9 @@ class AS_generator:
   def get_as_network_name(self):
     return self.as_network_name
 
+  def get_router_dict(self):
+    return self.router_dict
+
 
 class Router_generator:
   def __init__(self, on_as, for_as, address_database, peer_address_flag, flag, as_gen, ip_i, as_network_name):
@@ -126,6 +129,9 @@ class Router_generator:
 
   def get_intra_as_address(self):
     return self.intra_as_address
+
+  def get_router_name(self):
+    return self.router_name
 
 class RPKI_generator:
   def __init__(self, rpki_net_address):
@@ -277,11 +283,28 @@ with open(compose_file_path, 'a') as f:
 print("Running docker-compose...")
 subprocess.call(["docker-compose", "-f", compose_file_path, "up", "-d"])
 
+print("Collecting assigned IP address...")
+intra_as_ip_dict = {}
 for as_gen in as_generator_dict.values():
   cmd = "docker network inspect " + project_name + "_" + as_gen.get_as_network_name()
   ret_val = subprocess.run(cmd.split(), stdout=subprocess.PIPE)
   net_info = yaml.safe_load(ret_val.stdout)
-  print(net_info)
+  for con in net_info[0]["Containers"].values():
+    intra_as_ip_dict.update({con["Name"]: con["IPv4Address"].split("/")[0]})
+print("DEBUG:")
+print(intra_as_ip_dict)
+
+routers_list = []
+for as_gen in as_generator_dict.values():
+  routers_list.extend(as_gen.get_router_dict().values())
+
+for rou_gen in routers_list:
+  address = intra_as_ip_dict[project_name + "_" + rou_gen.get_router_name() + "_1"]
+  print("DEBUG: by dict")
+  print(project_name + "_" + rou_gen.get_router_name() + "_1")
+  print(address)
+  print("DEBUG: by gen")
+  print(rou_gen.get_intra_as_address())
 
 print("Making config file in container...")
 quagga_list = []
