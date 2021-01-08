@@ -22,7 +22,7 @@ class AS_generator:
   def make_peer_router_for(self, as_num, address_database, peer_address_flag):
 
     if not as_num in self.router_dict.keys(): # 対応したルータがなければ、生成する
-      self.router_dict[as_num] = Router_generator(self.number, as_num, address_database, peer_address_flag, self.flag, self, self.as_network_name)
+      self.router_dict[as_num] = Router_generator(self.number, as_num, address_database, peer_address_flag, self.flag, self.as_network_name)
 
     return self.router_dict[as_num]
 
@@ -72,11 +72,10 @@ class AS_generator:
 
 
 class Router_generator:
-  def __init__(self, on_as, for_as, address_database, peer_address_flag, flag, as_gen, as_network_name):
+  def __init__(self, on_as, for_as, address_database, peer_address_flag, flag, as_network_name):
     self.on_as = on_as
     self.for_as = for_as
     self.address_database = address_database
-    #tmp self.as_network_address = address_database.get_as_net_address(as_gen)
     self.peer_address = address_database.get_peer_address(on_as, for_as, peer_address_flag)
     if peer_address_flag == "SMALLER":
       self.peer_address_opposite = address_database.get_peer_address(on_as, for_as, "BIGGER")
@@ -190,15 +189,6 @@ class Address_detabase:
     else:
       raise ValueError("mode incorrectly!")
 
-###tmp  def get_as_net_info(self):
-###
-###    as_net_info = {}
-###    for as_gen in self.as_net_dict.keys():
-###      #tmp as_net_info["as_net_" + str(as_gen.get_as_number())] = {"ipam": {"config": [{"subnet": self.as_net_dict[as_gen]}]}}
-###      as_net_info[as_gen.get_as_network_name()] = {}
-
-    return as_net_info
-
   def get_pnet_info(self):
 
     pnet_info = {}
@@ -298,7 +288,6 @@ subprocess.call(["docker-compose", "-f", compose_file_path, "up", "-d"])
 
 print("Collecting assigned IP address...")
 
-
 as_network_ip_dict = {}
 intra_as_ip_dict = {}
 for as_gen in as_generator_dict.values():
@@ -313,7 +302,7 @@ for as_gen in as_generator_dict.values():
   for con in net_info[0]["Containers"].values():
     intra_as_ip_dict.update({con["Name"]: con["IPv4Address"].split("/")[0]})
 
-print("DEBUG")
+print("Assigned AS network IP address")
 print(as_network_ip_dict)
 
 routers_list = []
