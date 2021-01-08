@@ -14,7 +14,6 @@ class AS_generator:
     self.number = number
     self.flag = flag
     self.address_database = address_database
-    self.address = address_database.get_as_net_address(self)
     self.as_network_name = "as_net_" + str(self.number)
 
     self.router_dict = {}
@@ -22,7 +21,7 @@ class AS_generator:
   def make_peer_router_for(self, as_num, address_database, peer_address_flag):
 
     if not as_num in self.router_dict.keys(): # 対応したルータがなければ、生成する
-      self.router_dict[as_num] = Router_generator(self.number, as_num, address_database, peer_address_flag, self.flag, self, self.as_network_name)
+      self.router_dict[as_num] = Router_generator(self.number, as_num, address_database, peer_address_flag, self.flag, self.as_network_name)
 
     return self.router_dict[as_num]
 
@@ -53,9 +52,6 @@ class AS_generator:
 
     return srx_list
 
-  def get_as_number(self):
-    return self.number
-
   def get_router_address_list(self):
 
     address_list = []
@@ -70,13 +66,15 @@ class AS_generator:
   def get_router_dict(self):
     return self.router_dict
 
+  def get_as_net_info(self):
+    return {self.as_network_name: {}}
+
 
 class Router_generator:
-  def __init__(self, on_as, for_as, address_database, peer_address_flag, flag, as_gen, as_network_name):
+  def __init__(self, on_as, for_as, address_database, peer_address_flag, flag, as_network_name):
     self.on_as = on_as
     self.for_as = for_as
     self.address_database = address_database
-    self.as_network_address = address_database.get_as_net_address(as_gen)
     self.peer_address = address_database.get_peer_address(on_as, for_as, peer_address_flag)
     if peer_address_flag == "SMALLER":
       self.peer_address_opposite = address_database.get_peer_address(on_as, for_as, "BIGGER")
@@ -113,6 +111,12 @@ class Router_generator:
   def get_for_as_num(self):
     return self.for_as
 
+  def get_as_network_name(self):
+    return self.as_network_name
+
+  def set_as_network_address(self, ip):
+    self.as_network_address = ip
+
   def get_as_network_address(self):
     return self.as_network_address
 
@@ -144,25 +148,14 @@ class RPKI_generator:
 
 class Address_detabase:
   def __init__(self):
-    self.AS_NET_ADDRESS_PREFIX = "191.168."
     self.PEER_ADDRESS_PREFIX = "171.17."
     self.RPKI_NET_ADDRESS_PREFIX = "171.16.0."
 
-    self.as_net_i = 2
     self.peer_address_i = 2
     self.rnet_address_i = 2
 
-    self.as_net_dict = {}
     self.peer_address_dict = {}
     self.rnet_address_dict = {}
-
-  def get_as_net_address(self, as_gen):
-
-    if not as_gen in self.as_net_dict.keys(): # ASに対応したアドレスがなければ、生成する
-      self.as_net_dict[as_gen] = self.AS_NET_ADDRESS_PREFIX + str(self.as_net_i) + ".0/24"
-      self.as_net_i += 1
-
-    return self.as_net_dict[as_gen]
 
   def get_peer_address(self, peer1, peer2, mode):
 
@@ -183,14 +176,6 @@ class Address_detabase:
       return self.peer_address_dict[peer_key][:-5] + ".3"
     else:
       raise ValueError("mode incorrectly!")
-
-  def get_as_net_info(self):
-
-    as_net_info = {}
-    for as_gen in self.as_net_dict.keys():
-      as_net_info["as_net_" + str(as_gen.get_as_number())] = {"ipam": {"config": [{"subnet": self.as_net_dict[as_gen]}]}}
-
-    return as_net_info
 
   def get_pnet_info(self):
 
@@ -273,7 +258,9 @@ containers_info.update(rpki_generator.get_rpki_info())
 
 compose_services = {'services': containers_info}
 
-networks_info = address_database.get_as_net_info()
+networks_info = {}
+for as_gen in as_generator_dict.values():
+  networks_info.update(as_gen.get_as_net_info())
 networks_info.update(address_database.get_pnet_info())
 networks_info.update(address_database.get_rnet_info())
 compose_networks = {'networks': networks_info}
@@ -288,21 +275,31 @@ print("Running docker-compose...")
 subprocess.call(["docker-compose", "-f", compose_file_path, "up", "-d"])
 
 print("Collecting assigned IP address...")
+
+as_network_ip_dict = {}
 intra_as_ip_dict = {}
 for as_gen in as_generator_dict.values():
   cmd = "docker network inspect " + project_name + "_" + as_gen.get_as_network_name()
   ret_val = subprocess.run(cmd.split(), stdout=subprocess.PIPE)
   net_info = yaml.safe_load(ret_val.stdout)
+
+  # collecting as network address
+  as_network_ip_dict.update({net_info[0]["Name"]: net_info[0]["IPAM"]["Config"][0]["Subnet"]})
+
+  # collecting router intra AS IP address
   for con in net_info[0]["Containers"].values():
     intra_as_ip_dict.update({con["Name"]: con["IPv4Address"].split("/")[0]})
+
+print("Assigned AS network IP address")
+print(as_network_ip_dict)
 
 routers_list = []
 for as_gen in as_generator_dict.values():
   routers_list.extend(as_gen.get_router_dict().values())
 
 for rou_gen in routers_list:
-  address = intra_as_ip_dict[project_name + "_" + rou_gen.get_router_name() + "_1"]
-  rou_gen.set_intra_as_address(address)
+  rou_gen.set_as_network_address(as_network_ip_dict[project_name + "_" + rou_gen.get_as_network_name()])
+  rou_gen.set_intra_as_address(intra_as_ip_dict[project_name + "_" + rou_gen.get_router_name() + "_1"])
 
 print("Making config file in container...")
 quagga_list = []
