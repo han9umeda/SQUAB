@@ -104,7 +104,6 @@ class Router_generator:
 
   def get_router_info(self):
     if self.image == "quagga":
-      # return {self.router_name: {"image": self.image, "tty": "true", "networks": {self.network_name: {"ipv4_address": self.peer_address}, "as_net_" + str(self.on_as): {"ipv4_address": self.intra_as_address}}}}
       return {self.router_name: {"image": self.image, "tty": "true", "networks": {self.network_name: {"ipv4_address": self.peer_address}, self.as_network_name: {}}}}
     elif self.image == "srx":
       return {self.router_name: {"image": self.image, "tty": "true", "networks": {self.network_name: {"ipv4_address": self.peer_address}, self.as_network_name: {"ipv4_address": self.intra_as_address}, "rnet": {"ipv4_address": self.rnet_address}}}}
@@ -132,6 +131,9 @@ class Router_generator:
 
   def get_router_name(self):
     return self.router_name
+
+  def set_intra_as_address(self, ip):
+    self.intra_as_address = ip
 
 class RPKI_generator:
   def __init__(self, rpki_net_address):
@@ -291,8 +293,6 @@ for as_gen in as_generator_dict.values():
   net_info = yaml.safe_load(ret_val.stdout)
   for con in net_info[0]["Containers"].values():
     intra_as_ip_dict.update({con["Name"]: con["IPv4Address"].split("/")[0]})
-print("DEBUG:")
-print(intra_as_ip_dict)
 
 routers_list = []
 for as_gen in as_generator_dict.values():
@@ -300,11 +300,7 @@ for as_gen in as_generator_dict.values():
 
 for rou_gen in routers_list:
   address = intra_as_ip_dict[project_name + "_" + rou_gen.get_router_name() + "_1"]
-  print("DEBUG: by dict")
-  print(project_name + "_" + rou_gen.get_router_name() + "_1")
-  print(address)
-  print("DEBUG: by gen")
-  print(rou_gen.get_intra_as_address())
+  rou_gen.set_intra_as_address(address)
 
 print("Making config file in container...")
 quagga_list = []
