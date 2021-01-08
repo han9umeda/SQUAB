@@ -14,7 +14,6 @@ class AS_generator:
     self.number = number
     self.flag = flag
     self.address_database = address_database
-    self.address = address_database.get_as_net_address(self)
     self.as_network_name = "as_net_" + str(self.number)
 
     self.router_dict = {}
@@ -149,25 +148,14 @@ class RPKI_generator:
 
 class Address_detabase:
   def __init__(self):
-    self.AS_NET_ADDRESS_PREFIX = "191.168."
     self.PEER_ADDRESS_PREFIX = "171.17."
     self.RPKI_NET_ADDRESS_PREFIX = "171.16.0."
 
-    self.as_net_i = 2
     self.peer_address_i = 2
     self.rnet_address_i = 2
 
-    self.as_net_dict = {}
     self.peer_address_dict = {}
     self.rnet_address_dict = {}
-
-  def get_as_net_address(self, as_gen):
-
-    if not as_gen in self.as_net_dict.keys(): # ASに対応したアドレスがなければ、生成する
-      self.as_net_dict[as_gen] = self.AS_NET_ADDRESS_PREFIX + str(self.as_net_i) + ".0/24"
-      self.as_net_i += 1
-
-    return self.as_net_dict[as_gen]
 
   def get_peer_address(self, peer1, peer2, mode):
 
