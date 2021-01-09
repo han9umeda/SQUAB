@@ -10,9 +10,9 @@ import yaml
 import subprocess
 
 class AS_generator:
-  def __init__(self, number, flag):
+  def __init__(self, number, image):
     self.number = number
-    self.flag = flag
+    self.image = image
     self.as_network_name = "as_net_" + str(self.number)
 
     self.router_dict = {}
@@ -20,7 +20,7 @@ class AS_generator:
   def make_peer_router_for(self, as_num):
 
     if not as_num in self.router_dict.keys(): # 対応したルータがなければ、生成する
-      self.router_dict[as_num] = Router_generator(self.number, as_num, self.flag, self.as_network_name)
+      self.router_dict[as_num] = Router_generator(self.number, as_num, self.image, self.as_network_name)
 
     return self.router_dict[as_num]
 
@@ -70,22 +70,17 @@ class AS_generator:
 
 
 class Router_generator:
-  def __init__(self, on_as, for_as, flag, as_network_name):
+  def __init__(self, on_as, for_as, image, as_network_name):
     self.on_as = on_as
     self.for_as = for_as
+
+    self.image = image
 
     self.peer_network_name = peer_network_name(on_as, for_as)
     self.as_network_name = as_network_name
 
     self.router_name = "router_" + str(self.on_as) + "_for_" + str(self.for_as)
     self.opposite_router_name = "router_" + str(self.for_as) + "_for_" + str(self.on_as)
-
-    if flag == 0:
-      self.image = "quagga"
-    elif flag == 1:
-      self.image = "srx"
-    else:
-      raise ValueError("flag incorrectly")
 
   def get_router_info(self):
     if self.image == "quagga":
@@ -176,7 +171,7 @@ with open(args[1]) as file:
 as_generator_dict = {}
 
 for as_num in config["AS_Setting"].keys():
-  as_generator_dict[as_num] = AS_generator(as_num, config["AS_Setting"][as_num]["flag"])
+  as_generator_dict[as_num] = AS_generator(as_num, config["AS_Setting"][as_num]["image"])
 
 peer_network_name_list = []
 for peer in config["Peer_info"]:
