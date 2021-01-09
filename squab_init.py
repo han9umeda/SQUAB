@@ -148,7 +148,6 @@ class RPKI_generator:
 class Address_detabase:
   def __init__(self):
     self.PEER_ADDRESS_PREFIX = "171.17."
-    self.RPKI_NET_ADDRESS_PREFIX = "171.16.0."
 
     self.peer_address_i = 2
 
@@ -182,12 +181,8 @@ class Address_detabase:
 
     return pnet_info
 
-  def get_rnet_address(self):
-
-    return self.RPKI_NET_ADDRESS_PREFIX + "0/24"
-
   def get_rnet_info(self):
-    return {"rnet": {"ipam": {"config": [{"subnet": self.get_rnet_address()}]}}}
+    return {"rnet": {}}
 
 
 def peer_network_name(peer1, peer2):
