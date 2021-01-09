@@ -2,19 +2,19 @@
 #
 # SQUAB(Scalable QUagga-based Automated configuration on BGP)
 # squab_rm.sh
-# input: PROJECT_NAME
+# input: PR_NAME
 #
 
-PROJECT_NAME=$1
+PR_NAME=$1
 cd .work_dir
 
-if [ ! -d $PROJECT_NAME ]
+if [ ! -d $PR_NAME ]
 then
-	echo "project: $PROJECT_NAME is NOT exist." >&2
+	echo "project: $PR_NAME is NOT exist." >&2
 	exit 1
 fi
 
-cd $PROJECT_NAME
+cd $PR_NAME
 docker-compose down
 cd ..
-rm -r $PROJECT_NAME
+rm -r $PR_NAME
