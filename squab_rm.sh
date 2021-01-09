@@ -1,4 +1,9 @@
 #!/bin/bash
+#
+# SQUAB(Scalable QUagga-based Automated configuration on BGP)
+# squab_rm.sh
+# input: PROJECT_NAME
+#
 
 PROJECT_NAME=$1
 cd .work_dir
