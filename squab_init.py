@@ -163,6 +163,15 @@ filename = os.path.basename(args[1])
 match = re.search("\.yml$|\.yaml$", filename)
 
 project_name = filename[:match.start()]
+additional_name = ""
+i = 1
+while True:
+  if os.path.isdir("./.work_dir/" + project_name + additional_name) == False:
+    project_name = project_name + additional_name
+    break
+  additional_name = "_" + str(i)
+  i += 1
+
 print("Project name: " + project_name)
 
 with open(args[1]) as file:
