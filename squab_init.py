@@ -136,11 +136,11 @@ class Router_generator:
 
 
 class RPKI_generator:
-  def __init__(self, rpki_net_address):
-    self.address = rpki_net_address[:-5] + ".254"
-
   def get_rpki_info(self):
-    return {"rpki": {"image": "srx", "tty": "true", "networks": {"rnet": {"ipv4_address": self.address}}}}
+    return {"rpki": {"image": "srx", "tty": "true", "networks": {"rnet": {}}}}
+
+  def set_rpki_address(self, ip):
+    self.address = ip
 
   def get_rpki_address(self):
     return self.address
@@ -227,7 +227,7 @@ for peer in config["Peer_info"]:
   as_generator_dict[peer[0]].make_peer_router_for(peer[1], address_database, "SMALLER")
   as_generator_dict[peer[1]].make_peer_router_for(peer[0], address_database, "BIGGER")
 
-rpki_generator = RPKI_generator(address_database.get_rnet_address())
+rpki_generator = RPKI_generator()
 
 if os.path.isdir("./work_dir/" + project_name) == False:
   print("Making working directory in ./work_dir...")
@@ -281,6 +281,17 @@ for as_gen in as_generator_dict.values():
 
 print("Assigned AS network IP address")
 print(as_network_ip_dict)
+
+# collecting RPKI IP address
+cmd = "docker network inspect " + project_name + "_rnet"
+ret_val = subprocess.run(cmd.split(), stdout=subprocess.PIPE)
+rnet_info = yaml.safe_load(ret_val.stdout)
+for con in rnet_info[0]["Containers"].values():
+  if con["Name"] == project_name + "_rpki_1":
+    rpki_generator.set_rpki_address(con["IPv4Address"].split("/")[0])
+    break
+print("Assigned RPKI IP address")
+print(rpki_generator.get_rpki_address())
 
 routers_list = []
 for as_gen in as_generator_dict.values():
