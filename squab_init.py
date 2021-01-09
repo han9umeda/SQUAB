@@ -74,9 +74,7 @@ class Router_generator:
     self.on_as = on_as
     self.for_as = for_as
 
-    peer_ases = [on_as, for_as]
-    peer_ases.sort() # 引数として与えられるAS番号の順番に依存しないようにするため
-    self.peer_network_name = "pnet_" + str(peer_ases[0]) + "and" + str(peer_ases[1])
+    self.peer_network_name = peer_network_name(on_as, for_as)
     self.as_network_name = as_network_name
 
     self.router_name = "router_" + str(self.on_as) + "_for_" + str(self.for_as)
