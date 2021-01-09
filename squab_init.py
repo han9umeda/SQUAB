@@ -181,11 +181,11 @@ for peer in config["Peer_info"]:
 
 rpki_generator = RPKI_generator()
 
-if os.path.isdir("./work_dir/" + project_name) == False:
-  print("Making working directory in ./work_dir...")
-  subprocess.call(["mkdir", "./work_dir/" + project_name])
+if os.path.isdir("./.work_dir/" + project_name) == False:
+  print("Making working directory in ./.work_dir...")
+  subprocess.call(["mkdir", "./.work_dir/" + project_name])
 
-compose_file_path = './work_dir/' + project_name + '/docker-compose.yml'
+compose_file_path = './.work_dir/' + project_name + '/docker-compose.yml'
 
 print("Making docker-compose.yml file...")
 
