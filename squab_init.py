@@ -163,6 +163,15 @@ filename = os.path.basename(args[1])
 match = re.search("\.yml$|\.yaml$", filename)
 
 project_name = filename[:match.start()]
+additional_name = ""
+i = 1
+while True:
+  if os.path.isdir("./.work_dir/" + project_name + additional_name) == False:
+    project_name = project_name + additional_name
+    break
+  additional_name = "_" + str(i)
+  i += 1
+
 print("Project name: " + project_name)
 
 with open(args[1]) as file:
@@ -181,11 +190,11 @@ for peer in config["Peer_info"]:
 
 rpki_generator = RPKI_generator()
 
-if os.path.isdir("./work_dir/" + project_name) == False:
-  print("Making working directory in ./work_dir...")
-  subprocess.call(["mkdir", "./work_dir/" + project_name])
+if os.path.isdir("./.work_dir/" + project_name) == False:
+  print("Making working directory in ./.work_dir...")
+  subprocess.call(["mkdir", "./.work_dir/" + project_name])
 
-compose_file_path = './work_dir/' + project_name + '/docker-compose.yml'
+compose_file_path = './.work_dir/' + project_name + '/docker-compose.yml'
 
 print("Making docker-compose.yml file...")
 
