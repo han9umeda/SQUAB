@@ -92,7 +92,6 @@ class Router_generator:
       self.image = "quagga"
     elif flag == 1:
       self.image = "srx"
-      self.rnet_address = address_database.get_rnet_address_for_router(self)
     else:
       raise ValueError("flag incorrectly")
 
@@ -100,7 +99,7 @@ class Router_generator:
     if self.image == "quagga":
       return {self.router_name: {"image": self.image, "tty": "true", "networks": {self.network_name: {"ipv4_address": self.peer_address}, self.as_network_name: {}}}}
     elif self.image == "srx":
-      return {self.router_name: {"image": self.image, "tty": "true", "networks": {self.network_name: {"ipv4_address": self.peer_address}, self.as_network_name: {"ipv4_address": self.intra_as_address}, "rnet": {"ipv4_address": self.rnet_address}}}}
+      return {self.router_name: {"image": self.image, "tty": "true", "networks": {self.network_name: {"ipv4_address": self.peer_address}, self.as_network_name: {}, "rnet": {}}}}
 
   def get_image(self):
     return self.image
@@ -137,11 +136,11 @@ class Router_generator:
 
 
 class RPKI_generator:
-  def __init__(self, rpki_net_address):
-    self.address = rpki_net_address[:-5] + ".254"
-
   def get_rpki_info(self):
-    return {"rpki": {"image": "srx", "tty": "true", "networks": {"rnet": {"ipv4_address": self.address}}}}
+    return {"rpki": {"image": "srx", "tty": "true", "networks": {"rnet": {}}}}
+
+  def set_rpki_address(self, ip):
+    self.address = ip
 
   def get_rpki_address(self):
     return self.address
@@ -149,13 +148,10 @@ class RPKI_generator:
 class Address_detabase:
   def __init__(self):
     self.PEER_ADDRESS_PREFIX = "171.17."
-    self.RPKI_NET_ADDRESS_PREFIX = "171.16.0."
 
     self.peer_address_i = 2
-    self.rnet_address_i = 2
 
     self.peer_address_dict = {}
-    self.rnet_address_dict = {}
 
   def get_peer_address(self, peer1, peer2, mode):
 
@@ -185,20 +181,8 @@ class Address_detabase:
 
     return pnet_info
 
-  def get_rnet_address(self):
-
-    return self.RPKI_NET_ADDRESS_PREFIX + "0/24"
-
-  def get_rnet_address_for_router(self, router_gen):
-
-    if not router_gen in self.rnet_address_dict.keys(): # ルータに対応したアドレスがなければ、生成する
-      self.rnet_address_dict[router_gen] = self.RPKI_NET_ADDRESS_PREFIX + str(self.rnet_address_i)
-      self.rnet_address_i += 1
-
-    return self.rnet_address_dict[router_gen]
-
   def get_rnet_info(self):
-    return {"rnet": {"ipam": {"config": [{"subnet": self.get_rnet_address()}]}}}
+    return {"rnet": {}}
 
 
 def peer_network_name(peer1, peer2):
@@ -238,7 +222,7 @@ for peer in config["Peer_info"]:
   as_generator_dict[peer[0]].make_peer_router_for(peer[1], address_database, "SMALLER")
   as_generator_dict[peer[1]].make_peer_router_for(peer[0], address_database, "BIGGER")
 
-rpki_generator = RPKI_generator(address_database.get_rnet_address())
+rpki_generator = RPKI_generator()
 
 if os.path.isdir("./work_dir/" + project_name) == False:
   print("Making working directory in ./work_dir...")
@@ -293,6 +277,17 @@ for as_gen in as_generator_dict.values():
 print("Assigned AS network IP address")
 print(as_network_ip_dict)
 
+# collecting RPKI IP address
+cmd = "docker network inspect " + project_name + "_rnet"
+ret_val = subprocess.run(cmd.split(), stdout=subprocess.PIPE)
+rnet_info = yaml.safe_load(ret_val.stdout)
+for con in rnet_info[0]["Containers"].values():
+  if con["Name"] == project_name + "_rpki_1":
+    rpki_generator.set_rpki_address(con["IPv4Address"].split("/")[0])
+    break
+print("Assigned RPKI IP address")
+print(rpki_generator.get_rpki_address())
+
 routers_list = []
 for as_gen in as_generator_dict.values():
   routers_list.extend(as_gen.get_router_dict().values())
@@ -323,7 +318,7 @@ for quagga in quagga_list:
   router_index += 1
 
 for srx in srx_list:
-  rouname = project_name + "_" + quagga.get_router_name() + "_1"
+  rouname = project_name + "_" + srx.get_router_name() + "_1"
   subprocess.call(["docker", "exec", "-d", rouname, "/home/gen_zebra_bgpd_sec_conf.sh", str(router_index), str(srx.get_on_as_num()), srx.get_as_network_address(), rpki_generator.get_rpki_address(), str(srx.get_for_as_num()), str(srx.get_peer_address_opposite())])
   router_index += 1
 
@@ -334,7 +329,7 @@ for quagga in quagga_list:
   subprocess.call(["docker", "exec", "-d", "--privileged", rouname, "bgpd"])
 
 for srx in srx_list:
-  rouname = project_name + "_" + quagga.get_router_name() + "_1"
+  rouname = project_name + "_" + srx.get_router_name() + "_1"
   subprocess.call(["docker", "exec", "-d", "--privileged", rouname, "srx_server"])
   subprocess.call(["docker", "exec", "-d", "--privileged", rouname, "zebra"])
   subprocess.call(["docker", "exec", "-d", "--privileged", rouname, "bgpd"])
