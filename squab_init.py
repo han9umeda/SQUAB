@@ -87,6 +87,7 @@ class Router_generator:
     self.as_network_name = as_network_name
 
     self.router_name = "router_" + str(self.on_as) + "_for_" + str(self.for_as)
+    self.opposite_router_name = "router_" + str(self.for_as) + "_for_" + str(self.on_as)
 
     if flag == 0:
       self.image = "quagga"
@@ -119,8 +120,14 @@ class Router_generator:
   def get_as_network_address(self):
     return self.as_network_address
 
+  def set_peer_address(self, ip):
+    self.peer_address = ip
+
   def get_peer_address(self):
     return self.peer_address
+
+  def set_peer_address_opposite(self, ip):
+    self.peer_address_opposite = ip
 
   def get_peer_address_opposite(self):
     return self.peer_address_opposite
@@ -133,6 +140,9 @@ class Router_generator:
 
   def get_router_name(self):
     return self.router_name
+
+  def get_opposite_router_name(self):
+    return self.opposite_router_name
 
 
 class RPKI_generator:
@@ -286,11 +296,18 @@ for pnet_name in peer_network_name_list:
   ret_val = subprocess.run(cmd.split(), stdout=subprocess.PIPE)
   net_info = yaml.safe_load(ret_val.stdout)
 
-  peer_network_ip_dict[pnet_name] = {}
   for con in net_info[0]["Containers"].values():
-    peer_network_ip_dict[pnet_name].update({con["Name"]: con["IPv4Address"].split("/")[0]})
+    peer_network_ip_dict.update({con["Name"]: con["IPv4Address"].split("/")[0]})
 print("Assigned Peer network IP address")
 print(peer_network_ip_dict)
+
+routers_list = []
+for as_gen in as_generator_dict.values():
+  routers_list.extend(as_gen.get_router_dict().values())
+
+for rou_gen in routers_list:
+  rou_gen.set_peer_address(peer_network_ip_dict[project_name + "_" + rou_gen.get_router_name() + "_1"])
+  rou_gen.set_peer_address_opposite(peer_network_ip_dict[project_name + "_" + rou_gen.get_opposite_router_name() + "_1"])
 
 # collecting RPKI IP address
 cmd = "docker network inspect " + project_name + "_rnet"
@@ -302,10 +319,6 @@ for con in rnet_info[0]["Containers"].values():
     break
 print("Assigned RPKI IP address")
 print(rpki_generator.get_rpki_address())
-
-routers_list = []
-for as_gen in as_generator_dict.values():
-  routers_list.extend(as_gen.get_router_dict().values())
 
 for rou_gen in routers_list:
   rou_gen.set_as_network_address(as_network_ip_dict[project_name + "_" + rou_gen.get_as_network_name()])
