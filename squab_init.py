@@ -218,9 +218,11 @@ as_generator_dict = {}
 for as_num in config["AS_Setting"].keys():
   as_generator_dict[as_num] = AS_generator(as_num, config["AS_Setting"][as_num]["flag"], address_database)
 
+peer_network_name_list = []
 for peer in config["Peer_info"]:
   as_generator_dict[peer[0]].make_peer_router_for(peer[1], address_database, "SMALLER")
   as_generator_dict[peer[1]].make_peer_router_for(peer[0], address_database, "BIGGER")
+  peer_network_name_list.append(peer_network_name(peer[0], peer[1]))
 
 rpki_generator = RPKI_generator()
 
@@ -274,8 +276,21 @@ for as_gen in as_generator_dict.values():
   for con in net_info[0]["Containers"].values():
     intra_as_ip_dict.update({con["Name"]: con["IPv4Address"].split("/")[0]})
 
-print("Assigned AS network IP address")
+print("Assigned AS network address")
 print(as_network_ip_dict)
+
+# collecting router peer network IP address
+peer_network_ip_dict = {}
+for pnet_name in peer_network_name_list:
+  cmd = "docker network inspect " + project_name + "_" + pnet_name
+  ret_val = subprocess.run(cmd.split(), stdout=subprocess.PIPE)
+  net_info = yaml.safe_load(ret_val.stdout)
+
+  peer_network_ip_dict[pnet_name] = {}
+  for con in net_info[0]["Containers"].values():
+    peer_network_ip_dict[pnet_name].update({con["Name"]: con["IPv4Address"].split("/")[0]})
+print("Assigned Peer network IP address")
+print(peer_network_ip_dict)
 
 # collecting RPKI IP address
 cmd = "docker network inspect " + project_name + "_rnet"
