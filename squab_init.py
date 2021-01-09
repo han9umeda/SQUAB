@@ -100,7 +100,8 @@ class Router_generator:
     if self.image == "quagga":
       return {self.router_name: {"image": self.image, "tty": "true", "networks": {self.network_name: {"ipv4_address": self.peer_address}, self.as_network_name: {}}}}
     elif self.image == "srx":
-      return {self.router_name: {"image": self.image, "tty": "true", "networks": {self.network_name: {"ipv4_address": self.peer_address}, self.as_network_name: {"ipv4_address": self.intra_as_address}, "rnet": {"ipv4_address": self.rnet_address}}}}
+      #tmp return {self.router_name: {"image": self.image, "tty": "true", "networks": {self.network_name: {"ipv4_address": self.peer_address}, self.as_network_name: {"ipv4_address": self.intra_as_address}, "rnet": {"ipv4_address": self.rnet_address}}}}
+      return {self.router_name: {"image": self.image, "tty": "true", "networks": {self.network_name: {"ipv4_address": self.peer_address}, self.as_network_name: {}, "rnet": {}}}}
 
   def get_image(self):
     return self.image
@@ -323,7 +324,7 @@ for quagga in quagga_list:
   router_index += 1
 
 for srx in srx_list:
-  rouname = project_name + "_" + quagga.get_router_name() + "_1"
+  rouname = project_name + "_" + srx.get_router_name() + "_1"
   subprocess.call(["docker", "exec", "-d", rouname, "/home/gen_zebra_bgpd_sec_conf.sh", str(router_index), str(srx.get_on_as_num()), srx.get_as_network_address(), rpki_generator.get_rpki_address(), str(srx.get_for_as_num()), str(srx.get_peer_address_opposite())])
   router_index += 1
 
@@ -334,7 +335,7 @@ for quagga in quagga_list:
   subprocess.call(["docker", "exec", "-d", "--privileged", rouname, "bgpd"])
 
 for srx in srx_list:
-  rouname = project_name + "_" + quagga.get_router_name() + "_1"
+  rouname = project_name + "_" + srx.get_router_name() + "_1"
   subprocess.call(["docker", "exec", "-d", "--privileged", rouname, "srx_server"])
   subprocess.call(["docker", "exec", "-d", "--privileged", rouname, "zebra"])
   subprocess.call(["docker", "exec", "-d", "--privileged", rouname, "bgpd"])
