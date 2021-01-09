@@ -92,7 +92,6 @@ class Router_generator:
       self.image = "quagga"
     elif flag == 1:
       self.image = "srx"
-      self.rnet_address = address_database.get_rnet_address_for_router(self)
     else:
       raise ValueError("flag incorrectly")
 
@@ -100,7 +99,6 @@ class Router_generator:
     if self.image == "quagga":
       return {self.router_name: {"image": self.image, "tty": "true", "networks": {self.network_name: {"ipv4_address": self.peer_address}, self.as_network_name: {}}}}
     elif self.image == "srx":
-      #tmp return {self.router_name: {"image": self.image, "tty": "true", "networks": {self.network_name: {"ipv4_address": self.peer_address}, self.as_network_name: {"ipv4_address": self.intra_as_address}, "rnet": {"ipv4_address": self.rnet_address}}}}
       return {self.router_name: {"image": self.image, "tty": "true", "networks": {self.network_name: {"ipv4_address": self.peer_address}, self.as_network_name: {}, "rnet": {}}}}
 
   def get_image(self):
@@ -153,10 +151,8 @@ class Address_detabase:
     self.RPKI_NET_ADDRESS_PREFIX = "171.16.0."
 
     self.peer_address_i = 2
-    self.rnet_address_i = 2
 
     self.peer_address_dict = {}
-    self.rnet_address_dict = {}
 
   def get_peer_address(self, peer1, peer2, mode):
 
@@ -189,14 +185,6 @@ class Address_detabase:
   def get_rnet_address(self):
 
     return self.RPKI_NET_ADDRESS_PREFIX + "0/24"
-
-  def get_rnet_address_for_router(self, router_gen):
-
-    if not router_gen in self.rnet_address_dict.keys(): # ルータに対応したアドレスがなければ、生成する
-      self.rnet_address_dict[router_gen] = self.RPKI_NET_ADDRESS_PREFIX + str(self.rnet_address_i)
-      self.rnet_address_i += 1
-
-    return self.rnet_address_dict[router_gen]
 
   def get_rnet_info(self):
     return {"rnet": {"ipam": {"config": [{"subnet": self.get_rnet_address()}]}}}
