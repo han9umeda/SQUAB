@@ -156,10 +156,26 @@ args = sys.argv
 
 match = re.search("\.yml$|\.yaml$", args[1])
 if match == None:
-  print("invalid file name. (.yml or .yaml)")
+  print("Error: invalid file name. (.yml or .yaml)", file=sys.stderr)
   sys.exit(1)
-filename = os.path.basename(args[1])
 
+with open(args[1]) as file:
+  config = yaml.safe_load(file)
+
+for im in config["AS_Setting"].values():
+  if not (im["image"] == "quagga" or im["image"] == "srx"):
+    print("Error: image" + im["image"] + "is NOT supported.", file=sys.stderr)
+    sys.exit(1)
+
+peer_as = []
+for peer in config["Peer_info"]:
+  peer_as.extend(peer)
+for written_as in set(peer_as):
+  if not written_as in config["AS_Setting"].keys():
+    print("Error: AS " + written_as + "is NOT defined.", file=sys.stderr)
+    sys.exit(1)
+
+filename = os.path.basename(args[1])
 match = re.search("\.yml$|\.yaml$", filename)
 
 project_name = filename[:match.start()]
@@ -174,11 +190,7 @@ while True:
 
 print("Project name: " + project_name)
 
-with open(args[1]) as file:
-  config = yaml.safe_load(file)
-
 as_generator_dict = {}
-
 for as_num in config["AS_Setting"].keys():
   as_generator_dict[as_num] = AS_generator(as_num, config["AS_Setting"][as_num]["image"])
 
