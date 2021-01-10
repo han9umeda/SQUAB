@@ -2,7 +2,7 @@
 #
 # SQUAB(Scalable QUagga-based Automated configuration on BGP)
 # gen_zebra_bgpd_sec_conf.sh
-# input: ROUTER_INDEX ASN BNET RPKI_IP PEER_NUM PEER_ADDRESS
+# input: ROUTER_INDEX ASN BNET RPKI_IP PEER_NUM PEER_ADDRESS ROUTER_NAME
 #
 
 ZEBRA_CONF_FILE="/NIST-BGP-SRx-master/local-5.1.1/etc/zebra.conf"
@@ -57,7 +57,8 @@ echo " neighbor $PEER_ADDRESS remote-as $PEER_NUM" >> $BGPD_CONF_FILE
 echo " neighbor $PEER_ADDRESS next-hop-self" >> $BGPD_CONF_FILE
 
 cd $KEY_REPO
-echo " srx bgpsec ski 0 1 `qsrx-view-subject router_as$ASN`" >> $BGPD_CONF_FILE
+ROUTER_NAME=$7
+echo " srx bgpsec ski 0 1 `qsrx-view-subject $ROUTER_NAME`" >> $BGPD_CONF_FILE
 echo "!" >> $BGPD_CONF_FILE
 
 echo " ! SRx Basic Configuration Settings" >> $BGPD_CONF_FILE
