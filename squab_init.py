@@ -8,6 +8,7 @@ import os
 import re
 import yaml
 import subprocess
+from random import randint
 
 class AS_generator:
   def __init__(self, number, image):
@@ -147,6 +148,13 @@ def peer_network_name(peer1, peer2):
   peer_ases.sort() # 引数として与えられるAS番号の順番に依存しないようにするため
 
   return "pnet_" + str(peer_ases[0]) + "and" + str(peer_ases[1])
+
+def gen_random_network_address():
+  address = []
+  for i in range(3):
+    address.append(str(randint(0, 255)))
+  address.append("0/24")
+  return '.'.join(address)
 
 ###
 ### MAIN PROGRAM
