@@ -9,12 +9,14 @@ import re
 import yaml
 import subprocess
 from random import randint
+import ipaddress
 
 class AS_generator:
-  def __init__(self, number, image):
+  def __init__(self, number, image, rand_gen):
     self.number = number
     self.image = image
     self.as_network_name = "as_net_" + str(self.number)
+    self.as_network_address = rand_gen.get_address()
 
     self.router_dict = {}
 
@@ -67,7 +69,7 @@ class AS_generator:
     return self.router_dict
 
   def get_as_net_info(self):
-    return {self.as_network_name: {}}
+    return {self.as_network_name: {"ipam": {"config": [{"subnet": self.as_network_address}]}}}
 
 
 class Router_generator:
@@ -149,12 +151,34 @@ def peer_network_name(peer1, peer2):
 
   return "pnet_" + str(peer_ases[0]) + "and" + str(peer_ases[1])
 
-def gen_random_network_address():
-  address = []
-  for i in range(3):
+class Random_network_address_generator():
+  def __init__(self):
+    name = subprocess.run(["docker", "network", "ls", "--filter", "driver=bridge", "--format='{{.Name}}'"], stdout=subprocess.PIPE)
+    name = name.stdout.decode('utf-8').replace("'", "").split('\n')[:-1]
+    self.used_address_list = []
+    for n in name:
+      address = subprocess.run(["docker", "network", "inspect", n, "--format='{{.IPAM.Config}}'"], stdout=subprocess.PIPE)
+      address = address.stdout.decode('utf-8').split()[0][3:]
+      self.used_address_list.append(ipaddress.ip_network(address))
+
+  def get_address(self):
+    while True:
+      address = ipaddress.ip_network(self.gen_address())
+      can_use_flag = True
+      for used in self.used_address_list:
+        if address.subnet_of(used) or address.supernet_of(used):
+          can_use_flag = False
+          break
+      if can_use_flag == True:
+        self.used_address_list.append(address)
+        return address.exploded
+
+  def gen_address(self):
+    address = ["172"]
+    address.append(str(randint(16, 31)))
     address.append(str(randint(0, 255)))
-  address.append("0/24")
-  return '.'.join(address)
+    address.append("0/24")
+    return '.'.join(address)
 
 ###
 ### MAIN PROGRAM
@@ -198,9 +222,11 @@ while True:
 
 print("Project name: " + project_name)
 
+random_network_address_generator = Random_network_address_generator()
+
 as_generator_dict = {}
 for as_num in config["AS_Setting"].keys():
-  as_generator_dict[as_num] = AS_generator(as_num, config["AS_Setting"][as_num]["image"])
+  as_generator_dict[as_num] = AS_generator(as_num, config["AS_Setting"][as_num]["image"], random_network_address_generator)
 
 peer_network_name_list = []
 for peer in config["Peer_info"]:
@@ -232,7 +258,7 @@ networks_info = {}
 for as_gen in as_generator_dict.values():
   networks_info.update(as_gen.get_as_net_info())
 for name in peer_network_name_list:
-  networks_info.update({name: {}})
+  networks_info.update({name: {"ipam": {"config": [{"subnet": random_network_address_generator.get_address()}]}}})
 networks_info.update({"rnet": {}})
 compose_networks = {'networks': networks_info}
 
@@ -273,7 +299,7 @@ for pnet_name in peer_network_name_list:
 
   for con in net_info[0]["Containers"].values():
     peer_network_ip_dict.update({con["Name"]: con["IPv4Address"].split("/")[0]})
-print("Assigned Peer network IP address")
+print("Assigned Peer IP address")
 print(peer_network_ip_dict)
 
 routers_list = []
