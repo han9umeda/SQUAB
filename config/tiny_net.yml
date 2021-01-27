@@ -1,0 +1,7 @@
+AS_Setting:
+  53:
+    image: quagga
+  83:
+    image: quagga
+Peer_info:
+  - [53, 83]

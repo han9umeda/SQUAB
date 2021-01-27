@@ -1,0 +1,28 @@
+AS_Setting:
+  1103:
+    image: quagga
+  3333:
+    image: quagga
+  29075:
+    image: quagga
+  30781:
+    image: quagga
+  39351:
+    image: quagga
+  51405:
+    image: quagga
+  57119:
+    image: quagga
+  206610:
+    image: quagga
+Peer_info:
+  - [3333, 1103]
+  - [1103, 30781]
+  - [30781, 39351]
+  - [30781, 57119]
+  - [30781, 206610]
+  - [57119, 51405]
+  - [206610, 51405]
+  - [30781, 29075]
+  - [57119, 29075]
+  - [29075, 3333]
