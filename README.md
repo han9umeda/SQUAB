@@ -7,6 +7,9 @@
 `$ docker load < quagga_099224.tar`
 `$ docker load < srx_511.tar`
 
+$ docker build -t quagga_099224 -f Quaggafile .
+$ docker build -t srx_511 -f SRxfile .
+
  - ネットワークの自動構築
 
 `$ ./net_init.sh <configファイル>`

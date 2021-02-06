@@ -56,7 +56,7 @@ do
 	eval SECF=\$SEC_FLAG_AS$asn
 	if [ $SECF -eq 1 ]	# BGPsec(PATHを通しているのでオプションが長い)
 	then
-		docker run -td --privileged --name pr_${PR_NAME}_as$asn -e PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/home/NIST-BGP-SRx/local-5.1.1/bin:/home/NIST-BGP-SRx/local-5.1.1/sbin" ${SRX_CONTAINER_IMAGE}
+		docker run -td --privileged --name pr_${PR_NAME}_as$asn ${SRX_CONTAINER_IMAGE}
 	else			# BGP
 		docker run -td --privileged --name pr_${PR_NAME}_as$asn ${QUAGGA_CONTAINER_IMAGE}
 	fi
@@ -83,7 +83,7 @@ done
 
 # RPKIを作って、全ASと接続
 echo "Setting security system..."
-docker run -td --privileged --name pr_${PR_NAME}_rpki -e PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/home/NIST-BGP-SRx/local-5.1.1/bin:/home/NIST-BGP-SRx/local-5.1.1/sbin" ${SRX_CONTAINER_IMAGE}
+docker run -td --privileged --name pr_${PR_NAME}_rpki ${SRX_CONTAINER_IMAGE}
 docker exec -d pr_${PR_NAME}_rpki mkdir /home/cert
 docker network create --subnet ${RNET_ADDRESS_PREFIX}.0/24 pr_${PR_NAME}_rnet
 RPKI_ADDRESS=${RNET_ADDRESS_PREFIX}.254

@@ -1,0 +1,20 @@
+#
+# SQUAB(Scalable QUagga-based Automated configuration on Bgp)
+#
+# software router extension "BGP-SRx" image
+
+FROM centos:7
+
+RUN yum install -y telnet expect net-tools
+
+COPY srx_install.sh /home
+RUN /home/srx_install.sh zip
+
+ENV PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/NIST-BGP-SRx-master/local-5.1.1/bin:/NIST-BGP-SRx-master/local-5.1.1/sbin"
+
+COPY gen_zebra_bgpd_sec_conf.sh /home
+COPY get_rtable.sh /home
+
+RUN mkdir /var/lib/bgpsec-keys
+RUN cp /NIST-BGP-SRx-master/local-5.1.1/etc/qsrx-router-key.cnf.sample /etc/qsrx-router-key.cnf
+COPY cert_setting.sh /home
