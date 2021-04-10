@@ -1,61 +1,63 @@
 # SQUAB(Scalable QUagga-based Automated configuration on Bgp) README
 
-## SQUABとは
+## What is SQUAB?
 
-Dockerプラットフォーム上でBGPで通信が行われるネットワークを簡単に構築することができる実験ツールです。
+SQUAB is an experiment tool to set up networks by BGP easily on Docker platform.
 
-## 実行方法
+## How to use.
 
-### 初期設定(初めて利用するときのみ実行)
+### initial setting(execute only once)
 
-DockerとPython3系の環境を構築する
-pyyamlを入れる
-コンテナイメージをビルドする。
+Setting up Docker and Python3 environment on your computer.
 
+SQUAB uses pyyaml, so you should install pyyaml(for example `$ pip install pyyaml`).
+
+Building container images.
 `$ docker build -t quagga -f Quaggafile .`
 `$ docker build -t srx -f SRxfile .`
 
-(イメージ名をquaggaとsrxにしないとうまく動作しません。)
+(You must define image names "quagga" and "srx"! If you define other name, it won't execute correctly.)
 
-### 実験環境の立ち上げ
+### Setting up environment
 
 `$ python squab_init.py [config file name]`
 
-configファイルの名前は拡張子が.ymlか.yamlである必要があります。
-場所はどこでも構いません。
-サンプルファイルがconfigディレクトリに入っています。
-ファイル名から拡張子を取り除いたものがプロジェクト名として設定されます。
+SQUAB configuration filename extension must ".yml" or ".yaml".
+The place is "don't care".
+Sample SQUAB configuration files exist in config directory.
+Filename removed extension is used as project name.(filename: example.yml -> project name: example)
 
-### 今動いているプロジェクト一覧を表示
+### Check the project list of now executing
 
 `$ ./squab_pr_list.sh`
 
-### ルータから情報を取り出す
+### Take routing infomation of routers.
 
-環境上に存在する全てのルータから情報を取り出す時
+If you want to get all routers on a project, you can use this script.
 
 `$ ./get_all_routing_table.sh [project name]`
 
-それぞれのルータはコンテナに入っているため、dockerのコマンドを用いて、内部のルータを直接操作することも可能
+Each router is composed by container, so you can use docker command for each.
 
-### 実験環境の撤去
+### Remove project
 
 `$ ./squab_rm.sh [project name]`
 
-## メインプログラム以外の細かなスクリプトについて
+## Sub scripts(except main programs)
 
 ### gen\_zebra\_bgp\_conf.sh
 
-quaggaイメージ内でzebra.confとbgpd.confを生成する
+Generating zebra.conf and bgpd.conf in quagga container image.
 
 ### gen\_zebra\_bgp\_sec\_conf.sh
 
-srxイメージ内でzebra.confとbgpd.conf、srx_server.confを生成する
+Generating zebra.conf, bgpd.conf and srx\_server.conf in srx container image.
 
 ### cert\_setting.sh
 
-srxイメージ内で鍵生成と証明書発行を行う
+Generating key and the certificate in srx container image.
 
 ### srx\_install.sh
 
-srxイメージbuild時にBGP-SRxのダウンロードとbuildを行う
+When building srx image, it downloads BGP-SRx source and build them.
+
