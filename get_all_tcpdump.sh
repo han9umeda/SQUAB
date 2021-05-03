@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # SQUAB(Scalable QUagga-based Automated configuration on BGP)
-# get_all_bgpdump.sh
+# get_all_tcpdump.sh
 # input: PROJECT_NAME
 #
 

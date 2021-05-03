@@ -41,7 +41,7 @@ Each router is composed by container, so you can use docker command for each.
 
 ### Get `tcpdump` capture data
 
-`$ ./get_all_bgpdump.sh`
+`$ ./get_all_tcpdump.sh`
 
 ### Remove project
 
