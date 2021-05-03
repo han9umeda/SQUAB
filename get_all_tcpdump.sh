@@ -18,4 +18,5 @@ for con in ${AS_CON_LIST[@]}
 do
 	echo $con
 	docker exec -i $con bash -c "ls /home/* | grep eth | xargs cat"
+	echo ""
 done
