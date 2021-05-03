@@ -4,8 +4,8 @@
 # net_init.sh
 #
 PR_NAME=test
-QUAGGA_CONTAINER_IMAGE=quagga_099224
-SRX_CONTAINER_IMAGE=srx_511
+QUAGGA_CONTAINER_IMAGE=quagga
+SRX_CONTAINER_IMAGE=srx
 
 BNET_ADDRESS_PREFIX=191.168
 PNET_ADDRESS_PREFIX=171.17
@@ -135,6 +135,12 @@ docker cp /tmp/info.txt pr_${PR_NAME}_rpki:/home/cert
 
 # コンテナ内でプロセスの立ち上げ
 echo "Starting daemons..."
+
+for asn in ${AS_NUMBER[@]}
+do
+	docker exec -d --privileged pr_${PR_NAME}_as$asn /home/set_tcpdump.sh
+done
+
 for asn in ${AS_NUMBER[@]}
 do
 	eval SECF=\$SEC_FLAG_AS$asn
