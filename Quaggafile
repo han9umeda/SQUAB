@@ -9,3 +9,4 @@ RUN yum install -y quagga telnet expect tcpdump
 
 COPY gen_zebra_bgpd_conf.sh /home
 COPY get_rtable.sh /home
+COPY set_tcpdump.sh /home
