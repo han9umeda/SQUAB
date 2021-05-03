@@ -5,9 +5,9 @@
 # input: ROUTER_INDEX ASN BNET RPKI_IP PEER_NUM PEER_ADDRESS ROUTER_NAME
 #
 
-ZEBRA_CONF_FILE="/NIST-BGP-SRx-master/local-5.1.1/etc/zebra.conf"
-BGPD_CONF_FILE="/NIST-BGP-SRx-master/local-5.1.1/etc/bgpd.conf"
-SRX_SERVER_CONF_FILE="/NIST-BGP-SRx-master/local-5.1.1/etc/srx_server.conf"
+ZEBRA_CONF_FILE="/NIST-BGP-SRx-master/local-5.1.4/etc/zebra.conf"
+BGPD_CONF_FILE="/NIST-BGP-SRx-master/local-5.1.4/etc/bgpd.conf"
+SRX_SERVER_CONF_FILE="/NIST-BGP-SRx-master/local-5.1.4/etc/srx_server.conf"
 
 INTERFACE=($(echo $(ip addr | grep inet | grep eth | cut -f 11 -d' ' | tr '\n' ' ')))
 IP_ADDR=($(echo $(ip addr | grep inet | grep eth | cut -f 6 -d' ' | tr '\n' ' ')))
