@@ -13,7 +13,7 @@ RNET_ADDRESS_PREFIX=171.16.0
 
 # 設定ファイルの読み込み
 echo "Import Config file..."
-while read -r line
+while read -r line || [ -n "$line" ]
 do
 	INPUT+=($line)
 done < ${1}
