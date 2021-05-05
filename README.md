@@ -6,7 +6,7 @@ SQUAB is an experiment tool to set up networks by BGP easily on Docker platform.
 
 ## How to use.
 
-### initial setting(execute only once)
+### Initial setting(execute only once)
 
 Setting up Docker and Python3 environment on your computer.
 
@@ -31,7 +31,7 @@ Filename removed extension is used as project name.(filename: example.yml -> pro
 
 `$ ./squab_pr_list.sh`
 
-### Take routing infomation of routers.
+### Take routing infomation of routers
 
 If you want to get all routers on a project, you can use this script.
 
@@ -39,9 +39,25 @@ If you want to get all routers on a project, you can use this script.
 
 Each router is composed by container, so you can use docker command for each.
 
+### Get `tcpdump` capture data
+
+`$ ./get_all_tcpdump.sh`
+
 ### Remove project
 
 `$ ./squab_rm.sh [project name]`
+
+### RIPE RIS BGPlay data translation
+
+[RIPEstat BGPlay](https://stat.ripe.net/widget/bgplay) provides AS path information.
+You can download the data using the API.
+
+For example)
+`$ wget "https://stat.ripe.net/data/bgplay/data.json?resource=[AS number]"`
+
+SQUAB provides translation script from the data to SQUAB config file.
+
+`$ cat [BGPlay JSON file] | ./ripe_tosquab.sh`
 
 ## Sub scripts(except main programs)
 
@@ -61,3 +77,7 @@ Generating key and the certificate in srx container image.
 
 When building srx image, it downloads BGP-SRx source and build them.
 
+### set\_tcpdump.sh
+
+Setting `tcpdump` process (listening to TCP/179 port) for all NIC of container.
+The capture data is written in `/home/bgp_tcpdump_eth[0-9][0-9]*`.

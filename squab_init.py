@@ -356,6 +356,15 @@ for srx in srx_list:
   router_index += 1
 
 print("Starting daemons...")
+
+for quagga in quagga_list:
+  rouname = project_name + "_" + quagga.get_router_name() + "_1"
+  subprocess.call(["docker", "exec", "-d", rouname, "/home/set_tcpdump.sh", rouname])
+
+for srx in srx_list:
+  rouname = project_name + "_" + srx.get_router_name() + "_1"
+  subprocess.call(["docker", "exec", "-d", rouname, "/home/set_tcpdump.sh", rouname])
+
 for quagga in quagga_list:
   rouname = project_name + "_" + quagga.get_router_name() + "_1"
   subprocess.call(["docker", "exec", "-d", "--privileged", rouname, "zebra"])
