@@ -5,4 +5,4 @@
 #
 
 cd .work_dir
-ls | sed 's/ /\n/g'
+ls -1
