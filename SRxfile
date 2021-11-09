@@ -17,4 +17,6 @@ COPY get_rtable.sh /home
 COPY set_tcpdump.sh /home
 
 RUN mkdir /var/lib/bgpsec-keys
+RUN sed -e "s#/NIST-BGP-SRx-master/local-6.1.4/opt/bgp-srx-examples/bgpsec-keys#/var/lib/bgpsec-keys#g" /NIST-BGP-SRx-master/local-6.1.4/etc/srxcryptoapi.conf > /tmp/srxcryptoapi.conf
+RUN cp /tmp/srxcryptoapi.conf /NIST-BGP-SRx-master/local-6.1.4/etc/srxcryptoapi.conf
 COPY cert_setting.sh /home
