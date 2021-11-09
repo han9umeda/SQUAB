@@ -5,9 +5,9 @@
 # input: ROUTER_INDEX ASN BNET RPKI_IP PEER_NUM PEER_ADDRESS ROUTER_NAME
 #
 
-ZEBRA_CONF_FILE="/NIST-BGP-SRx-master/local-5.1.4/etc/zebra.conf"
-BGPD_CONF_FILE="/NIST-BGP-SRx-master/local-5.1.4/etc/bgpd.conf"
-SRX_SERVER_CONF_FILE="/NIST-BGP-SRx-master/local-5.1.4/etc/srx_server.conf"
+ZEBRA_CONF_FILE="/NIST-BGP-SRx-master/local-6.1.4/etc/zebra.conf"
+BGPD_CONF_FILE="/NIST-BGP-SRx-master/local-6.1.4/etc/bgpd.conf"
+SRX_SERVER_CONF_FILE="/NIST-BGP-SRx-master/local-6.1.4/etc/srx_server.conf"
 
 INTERFACE=($(echo $(ip addr | grep inet | grep eth | cut -f 11 -d' ' | tr '\n' ' ')))
 IP_ADDR=($(echo $(ip addr | grep inet | grep eth | cut -f 6 -d' ' | tr '\n' ' ')))
@@ -65,14 +65,14 @@ echo " ! SRx Basic Configuration Settings" >> $BGPD_CONF_FILE
 echo " srx set-proxy-id 172.18.0.$ROUTER_INDEX" >> $BGPD_CONF_FILE
 echo " srx set-server localhost 17900" >> $BGPD_CONF_FILE
 echo " srx keep-window 900" >> $BGPD_CONF_FILE
-echo " srx evaluation origin_only" >> $BGPD_CONF_FILE
+echo " srx evaluation aspa" >> $BGPD_CONF_FILE
 echo " no srx extcommunity" >> $BGPD_CONF_FILE
 echo " srx display" >> $BGPD_CONF_FILE
 echo "" >> $BGPD_CONF_FILE
 
 echo " ! SRx Evaluation Configuration Settings" >> $BGPD_CONF_FILE
 echo " srx set-origin-value valid" >> $BGPD_CONF_FILE
-echo " srx set-path-value undefined" >> $BGPD_CONF_FILE
+echo " srx set-aspa-value undefined" >> $BGPD_CONF_FILE
 echo "" >> $BGPD_CONF_FILE
 
 echo " ! Connect to SRx-server" >> $BGPD_CONF_FILE

@@ -10,12 +10,13 @@ RUN yum install -y telnet expect net-tools tcpdump
 COPY srx_install.sh /home
 RUN /home/srx_install.sh zip
 
-ENV PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/NIST-BGP-SRx-master/local-5.1.4/bin:/NIST-BGP-SRx-master/local-5.1.4/sbin"
+ENV PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/NIST-BGP-SRx-master/local-6.1.4/bin:/NIST-BGP-SRx-master/local-6.1.4/sbin"
 
 COPY gen_zebra_bgpd_sec_conf.sh /home
 COPY get_rtable.sh /home
 COPY set_tcpdump.sh /home
 
 RUN mkdir /var/lib/bgpsec-keys
-RUN cp /NIST-BGP-SRx-master/local-5.1.4/etc/qsrx-router-key.cnf.sample /etc/qsrx-router-key.cnf
+RUN sed -e "s#/NIST-BGP-SRx-master/local-6.1.4/opt/bgp-srx-examples/bgpsec-keys#/var/lib/bgpsec-keys#g" /NIST-BGP-SRx-master/local-6.1.4/etc/srxcryptoapi.conf > /tmp/srxcryptoapi.conf
+RUN cp /tmp/srxcryptoapi.conf /NIST-BGP-SRx-master/local-6.1.4/etc/srxcryptoapi.conf
 COPY cert_setting.sh /home
