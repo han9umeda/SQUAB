@@ -65,14 +65,14 @@ echo " ! SRx Basic Configuration Settings" >> $BGPD_CONF_FILE
 echo " srx set-proxy-id 172.18.0.$ROUTER_INDEX" >> $BGPD_CONF_FILE
 echo " srx set-server localhost 17900" >> $BGPD_CONF_FILE
 echo " srx keep-window 900" >> $BGPD_CONF_FILE
-echo " srx evaluation origin_only" >> $BGPD_CONF_FILE
+echo " srx evaluation aspa" >> $BGPD_CONF_FILE
 echo " no srx extcommunity" >> $BGPD_CONF_FILE
 echo " srx display" >> $BGPD_CONF_FILE
 echo "" >> $BGPD_CONF_FILE
 
 echo " ! SRx Evaluation Configuration Settings" >> $BGPD_CONF_FILE
 echo " srx set-origin-value valid" >> $BGPD_CONF_FILE
-echo " srx set-path-value undefined" >> $BGPD_CONF_FILE
+echo " srx set-aspa-value undefined" >> $BGPD_CONF_FILE
 echo "" >> $BGPD_CONF_FILE
 
 echo " ! Connect to SRx-server" >> $BGPD_CONF_FILE
