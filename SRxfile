@@ -17,5 +17,4 @@ COPY get_rtable.sh /home
 COPY set_tcpdump.sh /home
 
 RUN mkdir /var/lib/bgpsec-keys
-RUN cp /NIST-BGP-SRx-master/local-6.1.4/etc/qsrx-router-key.conf /etc/qsrx-router-key.conf
 COPY cert_setting.sh /home

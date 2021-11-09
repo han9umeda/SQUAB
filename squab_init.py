@@ -356,7 +356,7 @@ for quagga in quagga_list:
 subprocess.call(["docker", "exec", "-d", project_name + "-rpki-1", "mkdir", "/home/cert"]) # for srx ruoter certificate
 for srx in srx_list:
   rouname = project_name + "-" + srx.get_router_name() + "-1"
-  subprocess.call(["docker", "exec", "-d", rouname, "/home/cert_setting.sh", rouname])
+  subprocess.call(["docker", "exec", "-d", rouname, "/home/cert_setting.sh", rouname, str(srx.get_on_as_num())])
   subprocess.call(["docker", "cp", rouname + ":/var/lib/bgpsec-keys/" + rouname + ".cert", "/tmp"])
   subprocess.call(["docker", "cp", "/tmp/" + rouname + ".cert", project_name + "-rpki-1:/home/cert/"])
   subprocess.call(["docker", "exec", "-d", rouname, "/home/gen_zebra_bgpd_sec_conf.sh", str(router_index), str(srx.get_on_as_num()), srx.get_as_network_address(), rpki_generator.get_rpki_address(), str(srx.get_for_as_num()), str(srx.get_peer_address_opposite()), rouname])
