@@ -3,6 +3,7 @@
 # SQUAB(Scalable QUagga-based Automated configuration on BGP)
 # gen_zebra_bgpd_conf.sh
 # input: ROUTER_INDEX ASN BNET PEER_NUM PEER_ADDRESS INTRA_ROUTER_ADDRESS[es]
+# INTRA_ROUTER_ADDRESS[es] is ONE string!! (Ex.: "192.168.10.2 192.168.10.3")
 #
 
 ZEBRA_CONF_FILE="/etc/quagga/zebra.conf"
@@ -54,7 +55,7 @@ echo " neighbor $PEER_ADDRESS remote-as $PEER_NUM" >> $BGPD_CONF_FILE
 echo " neighbor $PEER_ADDRESS next-hop-self" >> $BGPD_CONF_FILE
 
 echo "! intra AS router info"
-for intra_router_address in ${@:6}
+for intra_router_address in $6		# $6 is ONE String!! (Ex.: "192.168.10.2 192.168.10.3")
 do
 	echo " neighbor $intra_router_address remote-as $ASN" >> $BGPD_CONF_FILE
 done
