@@ -85,7 +85,7 @@ class Router_generator:
     self.router_name = "router_" + str(self.on_as) + "_for_" + str(self.for_as)
     self.opposite_router_name = "router_" + str(self.for_as) + "_for_" + str(self.on_as)
 
-    self.local-preference = 100
+    self.local_preference = 100
 
   def get_router_info(self):
     if self.image == "quagga":
@@ -135,11 +135,11 @@ class Router_generator:
   def get_opposite_router_name(self):
     return self.opposite_router_name
 
-  def set_local_preference(self, local-pref):
-    self.local-preference = local-pref
+  def set_local_preference(self, local_pref):
+    self.local_preference = local_pref
 
   def get_local_preference(self):
-    return self.local-preference
+    return self.local_preference
 
 
 class RPKI_generator:
