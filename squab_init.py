@@ -85,6 +85,8 @@ class Router_generator:
     self.router_name = "router_" + str(self.on_as) + "_for_" + str(self.for_as)
     self.opposite_router_name = "router_" + str(self.for_as) + "_for_" + str(self.on_as)
 
+    self.local-preference = 100
+
   def get_router_info(self):
     if self.image == "quagga":
       return {self.router_name: {"image": self.image, "tty": "true", "networks": {self.peer_network_name: {}, self.as_network_name: {}}}}
@@ -132,6 +134,12 @@ class Router_generator:
 
   def get_opposite_router_name(self):
     return self.opposite_router_name
+
+  def set_local_preference(self, local-pref):
+    self.local-preference = local-pref
+
+  def get_local_preference(self):
+    return self.local-preference
 
 
 class RPKI_generator:
@@ -233,6 +241,10 @@ for peer in config["Peer_info"]:
   as_generator_dict[peer[0]].make_peer_router_for(peer[1])
   as_generator_dict[peer[1]].make_peer_router_for(peer[0])
   peer_network_name_list.append(peer_network_name(peer[0], peer[1]))
+#   if len(peer) == 3:
+#     for keyword in peer[2].keys():
+#       if keyword == "local-pref":
+#         as_generator_dict[peer[0]]
 
 rpki_generator = RPKI_generator()
 
