@@ -56,6 +56,7 @@ echo " bgp router-id 10.10.10.$ROUTER_INDEX" >> $BGPD_CONF_FILE
 echo " network $BNET" >> $BGPD_CONF_FILE
 echo " neighbor $PEER_ADDRESS remote-as $PEER_NUM" >> $BGPD_CONF_FILE
 echo " neighbor $PEER_ADDRESS next-hop-self" >> $BGPD_CONF_FILE
+echo " neighbor $PEER_ADDRESS route-map setlocalpre in" >> $BGPD_CONF_FILE
 
 echo "! intra AS router info"
 for intra_router_address in $8		# $8 is ONE String!! (Ex.: "192.168.10.2 192.168.10.3")
@@ -87,6 +88,12 @@ echo "" >> $BGPD_CONF_FILE
 echo " ! Connect to SRx-server" >> $BGPD_CONF_FILE
 echo " srx connect" >> $BGPD_CONF_FILE
 echo "!" >> $BGPD_CONF_FILE
+
+echo "route-map setlocalpre permit 10" >> $BGPD_CONF_FILE
+echo " set local-preference 200" >> $BGPD_CONF_FILE
+
+echo "!" >> $BGPD_CONF_FILE
+
 echo "line vty" >> $BGPD_CONF_FILE
 echo "!" >> $BGPD_CONF_FILE
 
