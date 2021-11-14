@@ -71,6 +71,9 @@ class AS_generator:
   def get_as_net_info(self):
     return {self.as_network_name: {"ipam": {"config": [{"subnet": self.as_network_address}]}}}
 
+  def get_peer_router_for(self, as_num):
+    return self.router_dict[as_num]
+
 
 class Router_generator:
   def __init__(self, on_as, for_as, image, as_network_name):
@@ -84,6 +87,8 @@ class Router_generator:
 
     self.router_name = "router_" + str(self.on_as) + "_for_" + str(self.for_as)
     self.opposite_router_name = "router_" + str(self.for_as) + "_for_" + str(self.on_as)
+
+    self.local_preference = 100
 
   def get_router_info(self):
     if self.image == "quagga":
@@ -132,6 +137,12 @@ class Router_generator:
 
   def get_opposite_router_name(self):
     return self.opposite_router_name
+
+  def set_local_preference(self, local_pref):
+    self.local_preference = local_pref
+
+  def get_local_preference(self):
+    return self.local_preference
 
 
 class RPKI_generator:
@@ -201,7 +212,7 @@ for im in config["AS_Setting"].values():
 
 peer_as = []
 for peer in config["Peer_info"]:
-  peer_as.extend(peer)
+  peer_as.extend(peer[:2]) # [:2] <- remove policy attribute
 for written_as in set(peer_as):
   if not written_as in config["AS_Setting"].keys():
     print("Error: AS " + written_as + "is NOT defined.", file=sys.stderr)
@@ -233,6 +244,12 @@ for peer in config["Peer_info"]:
   as_generator_dict[peer[0]].make_peer_router_for(peer[1])
   as_generator_dict[peer[1]].make_peer_router_for(peer[0])
   peer_network_name_list.append(peer_network_name(peer[0], peer[1]))
+  if len(peer) == 3:
+    attributes = peer[2]
+    for keyword in attributes.keys():
+      if keyword == "local-pref":
+        as_generator_dict[peer[0]].get_peer_router_for(peer[1]).set_local_preference(attributes["local-pref"][0])
+        as_generator_dict[peer[1]].get_peer_router_for(peer[0]).set_local_preference(attributes["local-pref"][1])
 
 rpki_generator = RPKI_generator()
 
@@ -350,7 +367,7 @@ for quagga in quagga_list:
     neighbor_intra_router_address = as_generator_dict[quagga.get_on_as_num()].get_router_address_list()
     neighbor_intra_router_address.remove(quagga.get_intra_as_address())
     neighbor_intra_router_address = ' '.join(neighbor_intra_router_address)
-  subprocess.call(["docker", "exec", "-d", rouname, "/home/gen_zebra_bgpd_conf.sh", str(router_index), str(quagga.get_on_as_num()), quagga.get_as_network_address(), str(quagga.get_for_as_num()), quagga.get_peer_address_opposite(), neighbor_intra_router_address])
+  subprocess.call(["docker", "exec", "-d", rouname, "/home/gen_zebra_bgpd_conf.sh", str(router_index), str(quagga.get_on_as_num()), quagga.get_as_network_address(), str(quagga.get_for_as_num()), quagga.get_peer_address_opposite(), neighbor_intra_router_address, str(quagga.get_local_preference())])
   router_index += 1
 
 subprocess.call(["docker", "exec", "-d", project_name + "-rpki-1", "mkdir", "/home/cert"]) # for srx ruoter certificate
@@ -365,7 +382,7 @@ for srx in srx_list:
   subprocess.call(["docker", "exec", "-d", rouname, "/home/cert_setting.sh", rouname, str(srx.get_on_as_num())])
   subprocess.call(["docker", "cp", rouname + ":/var/lib/bgpsec-keys/" + rouname + ".cert", "/tmp"])
   subprocess.call(["docker", "cp", "/tmp/" + rouname + ".cert", project_name + "-rpki-1:/home/cert/"])
-  subprocess.call(["docker", "exec", "-d", rouname, "/home/gen_zebra_bgpd_sec_conf.sh", str(router_index), str(srx.get_on_as_num()), srx.get_as_network_address(), rpki_generator.get_rpki_address(), str(srx.get_for_as_num()), str(srx.get_peer_address_opposite()), rouname, neighbor_intra_router_address])
+  subprocess.call(["docker", "exec", "-d", rouname, "/home/gen_zebra_bgpd_sec_conf.sh", str(router_index), str(srx.get_on_as_num()), srx.get_as_network_address(), rpki_generator.get_rpki_address(), str(srx.get_for_as_num()), str(srx.get_peer_address_opposite()), rouname, neighbor_intra_router_address, str(srx.get_local_preference())])
   router_index += 1
 
 print("Starting daemons...")
