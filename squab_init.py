@@ -362,7 +362,7 @@ for quagga in quagga_list:
     neighbor_intra_router_address = as_generator_dict[quagga.get_on_as_num()].get_router_address_list()
     neighbor_intra_router_address.remove(quagga.get_intra_as_address())
     neighbor_intra_router_address = ' '.join(neighbor_intra_router_address)
-  subprocess.call(["docker", "exec", "-d", rouname, "/home/gen_zebra_bgpd_conf.sh", str(router_index), str(quagga.get_on_as_num()), quagga.get_as_network_address(), str(quagga.get_for_as_num()), quagga.get_peer_address_opposite(), neighbor_intra_router_address])
+  subprocess.call(["docker", "exec", "-d", rouname, "/home/gen_zebra_bgpd_conf.sh", str(router_index), str(quagga.get_on_as_num()), quagga.get_as_network_address(), str(quagga.get_for_as_num()), quagga.get_peer_address_opposite(), neighbor_intra_router_address, str(quagga.get_local_preference())])
   router_index += 1
 
 subprocess.call(["docker", "exec", "-d", project_name + "-rpki-1", "mkdir", "/home/cert"]) # for srx ruoter certificate
@@ -377,7 +377,7 @@ for srx in srx_list:
   subprocess.call(["docker", "exec", "-d", rouname, "/home/cert_setting.sh", rouname, str(srx.get_on_as_num())])
   subprocess.call(["docker", "cp", rouname + ":/var/lib/bgpsec-keys/" + rouname + ".cert", "/tmp"])
   subprocess.call(["docker", "cp", "/tmp/" + rouname + ".cert", project_name + "-rpki-1:/home/cert/"])
-  subprocess.call(["docker", "exec", "-d", rouname, "/home/gen_zebra_bgpd_sec_conf.sh", str(router_index), str(srx.get_on_as_num()), srx.get_as_network_address(), rpki_generator.get_rpki_address(), str(srx.get_for_as_num()), str(srx.get_peer_address_opposite()), rouname, neighbor_intra_router_address])
+  subprocess.call(["docker", "exec", "-d", rouname, "/home/gen_zebra_bgpd_sec_conf.sh", str(router_index), str(srx.get_on_as_num()), srx.get_as_network_address(), rpki_generator.get_rpki_address(), str(srx.get_for_as_num()), str(srx.get_peer_address_opposite()), rouname, neighbor_intra_router_address, str(srx.get_local_preference())])
   router_index += 1
 
 print("Starting daemons...")
