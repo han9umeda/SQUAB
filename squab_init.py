@@ -71,6 +71,9 @@ class AS_generator:
   def get_as_net_info(self):
     return {self.as_network_name: {"ipam": {"config": [{"subnet": self.as_network_address}]}}}
 
+  def get_peer_router_for(self, as_num):
+    return self.router_dict[as_num]
+
 
 class Router_generator:
   def __init__(self, on_as, for_as, image, as_network_name):
@@ -209,7 +212,7 @@ for im in config["AS_Setting"].values():
 
 peer_as = []
 for peer in config["Peer_info"]:
-  peer_as.extend(peer)
+  peer_as.extend(peer[:2]) # [:2] <- remove policy attribute
 for written_as in set(peer_as):
   if not written_as in config["AS_Setting"].keys():
     print("Error: AS " + written_as + "is NOT defined.", file=sys.stderr)
@@ -241,10 +244,12 @@ for peer in config["Peer_info"]:
   as_generator_dict[peer[0]].make_peer_router_for(peer[1])
   as_generator_dict[peer[1]].make_peer_router_for(peer[0])
   peer_network_name_list.append(peer_network_name(peer[0], peer[1]))
-#   if len(peer) == 3:
-#     for keyword in peer[2].keys():
-#       if keyword == "local-pref":
-#         as_generator_dict[peer[0]]
+  if len(peer) == 3:
+    attributes = peer[2]
+    for keyword in attributes.keys():
+      if keyword == "local-pref":
+        as_generator_dict[peer[0]].get_peer_router_for(peer[1]).set_local_preference(attributes["local-pref"][0])
+        as_generator_dict[peer[1]].get_peer_router_for(peer[0]).set_local_preference(attributes["local-pref"][1])
 
 rpki_generator = RPKI_generator()
 
