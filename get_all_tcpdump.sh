@@ -12,7 +12,7 @@ fi
 
 PR_NAME=$1
 
-AS_CON_LIST=(`docker ps -a --filter "name=${PR_NAME}_router" --format "{{.Names}}"`)
+AS_CON_LIST=(`docker ps -a --filter "name=${PR_NAME}-router" --format "{{.Names}}"`)
 
 for con in ${AS_CON_LIST[@]}
 do
