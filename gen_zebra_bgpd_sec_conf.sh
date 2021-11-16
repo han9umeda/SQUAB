@@ -2,12 +2,13 @@
 #
 # SQUAB(Scalable QUagga-based Automated configuration on BGP)
 # gen_zebra_bgpd_sec_conf.sh
-# input: ROUTER_INDEX ASN BNET RPKI_IP PEER_NUM PEER_ADDRESS ROUTER_NAME
+# input: ROUTER_INDEX ASN BNET RPKI_IP PEER_NUM PEER_ADDRESS ROUTER_NAME INTRA_ROUTER_ADDRESS[es] LOCAL_PREF
+# INTRA_ROUTER_ADDRESS[es] is ONE string!! (Ex.: "192.168.10.2 192.168.10.3")
 #
 
-ZEBRA_CONF_FILE="/NIST-BGP-SRx-master/local-5.1.4/etc/zebra.conf"
-BGPD_CONF_FILE="/NIST-BGP-SRx-master/local-5.1.4/etc/bgpd.conf"
-SRX_SERVER_CONF_FILE="/NIST-BGP-SRx-master/local-5.1.4/etc/srx_server.conf"
+ZEBRA_CONF_FILE="/NIST-BGP-SRx-master/local-6.1.4/etc/zebra.conf"
+BGPD_CONF_FILE="/NIST-BGP-SRx-master/local-6.1.4/etc/bgpd.conf"
+SRX_SERVER_CONF_FILE="/NIST-BGP-SRx-master/local-6.1.4/etc/srx_server.conf"
 
 INTERFACE=($(echo $(ip addr | grep inet | grep eth | cut -f 11 -d' ' | tr '\n' ' ')))
 IP_ADDR=($(echo $(ip addr | grep inet | grep eth | cut -f 6 -d' ' | tr '\n' ' ')))
@@ -37,6 +38,7 @@ ASN=$2
 BNET=$3
 PEER_NUM=$5
 PEER_ADDRESS=$6
+LOCAL_PREF=$9
 
 KEY_REPO="/var/lib/bgpsec-keys"
 
@@ -55,6 +57,15 @@ echo " bgp router-id 10.10.10.$ROUTER_INDEX" >> $BGPD_CONF_FILE
 echo " network $BNET" >> $BGPD_CONF_FILE
 echo " neighbor $PEER_ADDRESS remote-as $PEER_NUM" >> $BGPD_CONF_FILE
 echo " neighbor $PEER_ADDRESS next-hop-self" >> $BGPD_CONF_FILE
+echo " neighbor $PEER_ADDRESS route-map setlocalpre in" >> $BGPD_CONF_FILE
+
+echo "! intra AS router info"
+for intra_router_address in $8		# $8 is ONE String!! (Ex.: "192.168.10.2 192.168.10.3")
+do
+	echo " neighbor $intra_router_address remote-as $ASN" >> $BGPD_CONF_FILE
+done
+
+echo "!" >> $BGPD_CONF_FILE
 
 cd $KEY_REPO
 ROUTER_NAME=$7
@@ -65,19 +76,25 @@ echo " ! SRx Basic Configuration Settings" >> $BGPD_CONF_FILE
 echo " srx set-proxy-id 172.18.0.$ROUTER_INDEX" >> $BGPD_CONF_FILE
 echo " srx set-server localhost 17900" >> $BGPD_CONF_FILE
 echo " srx keep-window 900" >> $BGPD_CONF_FILE
-echo " srx evaluation origin_only" >> $BGPD_CONF_FILE
+echo " srx evaluation aspa" >> $BGPD_CONF_FILE
 echo " no srx extcommunity" >> $BGPD_CONF_FILE
 echo " srx display" >> $BGPD_CONF_FILE
 echo "" >> $BGPD_CONF_FILE
 
 echo " ! SRx Evaluation Configuration Settings" >> $BGPD_CONF_FILE
 echo " srx set-origin-value valid" >> $BGPD_CONF_FILE
-echo " srx set-path-value undefined" >> $BGPD_CONF_FILE
+echo " srx set-aspa-value undefined" >> $BGPD_CONF_FILE
 echo "" >> $BGPD_CONF_FILE
 
 echo " ! Connect to SRx-server" >> $BGPD_CONF_FILE
 echo " srx connect" >> $BGPD_CONF_FILE
 echo "!" >> $BGPD_CONF_FILE
+
+echo "route-map setlocalpre permit 10" >> $BGPD_CONF_FILE
+echo " set local-preference $LOCAL_PREF" >> $BGPD_CONF_FILE
+
+echo "!" >> $BGPD_CONF_FILE
+
 echo "line vty" >> $BGPD_CONF_FILE
 echo "!" >> $BGPD_CONF_FILE
 

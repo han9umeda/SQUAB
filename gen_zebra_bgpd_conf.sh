@@ -2,7 +2,8 @@
 #
 # SQUAB(Scalable QUagga-based Automated configuration on BGP)
 # gen_zebra_bgpd_conf.sh
-# input: ROUTER_INDEX ASN BNET PEER_NUM PEER_ADDRESS INTRA_ROUTER_ADDRESS[es]
+# input: ROUTER_INDEX ASN BNET PEER_NUM PEER_ADDRESS INTRA_ROUTER_ADDRESS[es] LOCAL_PREF
+# INTRA_ROUTER_ADDRESS[es] is ONE string!! (Ex.: "192.168.10.2 192.168.10.3")
 #
 
 ZEBRA_CONF_FILE="/etc/quagga/zebra.conf"
@@ -36,6 +37,7 @@ ASN=$2
 BNET=$3
 PEER_NUM=$4
 PEER_ADDRESS=$5
+LOCAL_PREF=$7
 
 echo "!" > $BGPD_CONF_FILE
 echo "! bgpd.conf" >> $BGPD_CONF_FILE
@@ -52,12 +54,16 @@ echo " bgp router-id 10.10.10.$ROUTER_INDEX" >> $BGPD_CONF_FILE
 echo " network $BNET" >> $BGPD_CONF_FILE
 echo " neighbor $PEER_ADDRESS remote-as $PEER_NUM" >> $BGPD_CONF_FILE
 echo " neighbor $PEER_ADDRESS next-hop-self" >> $BGPD_CONF_FILE
+echo " neighbor $PEER_ADDRESS route-map setlocalpre in" >> $BGPD_CONF_FILE
 
 echo "! intra AS router info"
-for intra_router_address in ${@:6}
+for intra_router_address in $6		# $6 is ONE String!! (Ex.: "192.168.10.2 192.168.10.3")
 do
 	echo " neighbor $intra_router_address remote-as $ASN" >> $BGPD_CONF_FILE
 done
+
+echo "route-map setlocalpre permit 10" >> $BGPD_CONF_FILE
+echo " set local-preference $LOCAL_PREF" >> $BGPD_CONF_FILE
 
 echo "!" >> $BGPD_CONF_FILE
 

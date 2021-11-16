@@ -4,6 +4,17 @@
 
 SQUAB is an experiment tool to set up networks by BGP easily on Docker platform.
 
+## Support Envirionment
+
+SQUAB works on *macOS 11.6, Docker Desktop 4.2.0, Compose V2 enabled, Python 3.9.8*.
+
+The main component is composed of UNIX shell script, Python3, and Docker, so SQUAB probably runs on major UNIX-based OS.
+
+## Module Version
+
+ - [Quagga](https://github.com/Quagga/quagga) 0.99.22.4
+ - [BGP-SRx](https://github.com/usnistgov/NIST-BGP-SRx) 6.1.4
+
 ## How to use.
 
 ### Initial setting(execute only once)
@@ -41,7 +52,7 @@ Each router is composed by container, so you can use docker command for each.
 
 ### Get `tcpdump` capture data
 
-`$ ./get_all_tcpdump.sh`
+`$ ./get_all_tcpdump.sh [project name]`
 
 ### Remove project
 
